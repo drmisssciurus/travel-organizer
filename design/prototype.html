@@ -1,0 +1,1814 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>waypoint — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   Design tokens — waypoint
+   ===================================================================== */
+:root {
+  --font: 'Anonymous Pro', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* base palette */
+  --cafe: #4C3D19; --kombu: #354024; --moss: #889063; --tan: #CFBB99; --bone: #E5D7C4;
+
+  /* light theme */
+  --page: #EFE6D8; --card: #FAF6EF; --inset: #E5D7C4; --inset-2: #EADFCB; --moss-tint: #E1E2CD;
+  --border: #CFBB99; --heading: #4C3D19; --text: #354024; --muted: #62563E;
+  --primary: #354024; --on-primary: #F1E8DA; --accent: #889063; --track: #E5D7C4;
+  --error: #A3472B; --ochre: #B08A3E;
+  --shadow: 0 1px 2px rgba(76,61,25,.06), 0 4px 14px rgba(76,61,25,.06);
+  --shadow-sm: 0 1px 2px rgba(76,61,25,.08);
+  --shadow-lg: 0 18px 40px rgba(53,64,36,.28);
+  --overlay: rgba(60,55,40,.55);
+
+  /* category colors */
+  --c-sight: #889063; --c-food: #CFBB99; --c-transport: #354024; --c-stay: #4C3D19; --c-activity: #B08A3E;
+  --c-shopping: #889063; --c-other: #9A8F7A;
+
+  --r-card: 28px; --r-item: 18px; --r-input: 14px;
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --page: #1B2013; --card: #283019; --inset: #323C22; --inset-2: #2E371F; --moss-tint: #3A4529;
+  --border: #4B5636; --heading: #F1E8DA; --text: #F1E8DA; --muted: #CFBB99;
+  --primary: #889063; --on-primary: #1B2013; --accent: #A4AD7C; --track: #323C22;
+  --error: #E59A7E; --ochre: #D2AA5C;
+  --shadow: none; --shadow-sm: none; --shadow-lg: 0 18px 40px rgba(0,0,0,.55);
+  --overlay: rgba(0,0,0,.6);
+  --c-sight: #A4AD7C; --c-food: #CFBB99; --c-transport: #E5D7C4; --c-stay: #C08F6C; --c-activity: #D2AA5C;
+  --c-shopping: #7FA08A; --c-other: #8C8472;
+  color-scheme: dark;
+}
+
+/* =====================================================================
+   Base
+   ===================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--page); color: var(--text); font: 14px/1.45 var(--font); -webkit-font-smoothing: antialiased; transition: background-color .2s, color .2s; }
+body.dragging, body.dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3 { margin: 0; color: var(--heading); font-weight: 700; }
+h1 { font-size: 28px; line-height: 1.15; }
+h2 { font-size: 17px; }
+.meta { font-size: 13px; color: var(--muted); }
+.label { font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* =====================================================================
+   Controls
+   ===================================================================== */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 42px; padding: 0 20px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; transition: background-color .15s, filter .15s; }
+.btn:hover { background: var(--inset-2); }
+.btn-primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.btn-primary:hover { background: var(--primary); filter: brightness(1.12); }
+.btn-danger { background: var(--error); border-color: var(--error); color: #FAF6EF; }
+.btn-danger:hover { background: var(--error); filter: brightness(1.08); }
+[data-theme="dark"] .btn-danger { color: #1B2013; }
+.btn-danger-outline { color: var(--error); }
+.btn-sm { height: 34px; padding: 0 14px; font-size: 13px; }
+.circle-btn { width: 42px; height: 42px; flex: none; border-radius: 50%; border: 1px solid var(--border); background: var(--card); display: grid; place-items: center; cursor: pointer; font-size: 17px; font-weight: 700; color: var(--text); }
+.circle-btn:hover { background: var(--inset-2); }
+.circle-btn.sm { width: 34px; height: 34px; font-size: 14px; }
+.sq-btn { width: 38px; height: 38px; flex: none; border-radius: 13px; border: 1px solid var(--border); background: var(--card); display: grid; place-items: center; cursor: pointer; font-size: 14px; font-weight: 700; color: var(--text); }
+.sq-btn:hover { background: var(--inset-2); }
+.sq-btn.danger { color: var(--error); }
+.mini-btn { width: 24px; height: 24px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font-weight: 700; display: grid; place-items: center; flex: none; }
+.mini-btn:hover { background: var(--inset-2); color: var(--text); }
+.mini-btn.danger:hover { color: var(--error); }
+
+.pillseg { display: inline-flex; gap: 2px; padding: 4px; background: var(--inset); border-radius: 999px; max-width: 100%; }
+.pillseg > * { border: 0; background: none; height: 34px; padding: 0 16px; border-radius: 999px; font-weight: 700; font-size: 13px; color: var(--text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+.pillseg > *:hover { background: color-mix(in srgb, var(--card) 55%, transparent); }
+.pillseg > [aria-pressed="true"], .pillseg > [aria-current="page"], .pillseg input:checked + span { background: var(--primary); color: var(--on-primary); }
+.pillseg.sm > * { height: 28px; padding: 0 12px; font-size: 12px; }
+.pillseg.full { display: flex; }
+.pillseg.full > * { flex: 1; }
+
+.input, .select, .textarea { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: var(--r-input); background: var(--card); color: var(--text); transition: border-color .15s, box-shadow .15s; }
+.textarea { height: auto; min-height: 76px; padding: 10px 14px; resize: vertical; }
+.select { appearance: none; padding-right: 34px; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%); background-position: calc(100% - 18px) 19px, calc(100% - 13px) 19px; background-size: 5px 5px; background-repeat: no-repeat; }
+.select.pill { border-radius: 999px; width: auto; }
+.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--moss-tint); }
+.input::placeholder, .textarea::placeholder { color: var(--muted); opacity: .75; }
+.input.search { border-radius: 999px; background: var(--inset-2); border-color: transparent; }
+.input-sm { height: 36px; border-radius: 12px; padding: 0 12px; }
+
+input[type="checkbox"].ck { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; margin: 0; flex: none; border: 1.5px solid var(--heading); border-radius: 5px; background: var(--card); display: grid; place-items: center; cursor: pointer; }
+input[type="checkbox"].ck:checked { background: var(--primary); border-color: var(--primary); }
+input[type="checkbox"].ck:checked::after { content: ""; width: 10px; height: 5px; border-left: 2px solid var(--on-primary); border-bottom: 2px solid var(--on-primary); transform: translateY(-1px) rotate(-45deg); }
+
+.bar { height: 8px; border-radius: 99px; background: var(--track); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .3s; }
+.bar.over > i { background: var(--error); }
+
+.badge { display: inline-flex; align-items: center; height: 26px; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.b-ongoing { background: var(--primary); color: var(--on-primary); }
+.b-upcoming { background: var(--moss-tint); color: var(--text); }
+.b-past { background: var(--inset-2); color: var(--text); }
+
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; display: inline-block; }
+.cat { display: inline-flex; align-items: center; gap: 7px; }
+
+.av { width: 48px; height: 48px; flex: none; border-radius: 14px; display: grid; place-items: center; font-weight: 700; font-size: 18px; }
+.av.lg { width: 56px; height: 56px; border-radius: 16px; font-size: 21px; }
+.av-0 { background: var(--tan); color: var(--cafe); }
+.av-1 { background: var(--moss); color: #FAF6EF; }
+.av-2 { background: var(--kombu); color: var(--bone); }
+.av-3 { background: var(--bone); color: var(--cafe); }
+.av-4 { background: var(--cafe); color: var(--bone); }
+[data-theme="dark"] .av-2 { background: #3F4B2A; }
+[data-theme="dark"] .av-3 { background: #E5D7C4; }
+
+.card { background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); }
+
+/* =====================================================================
+   App bar
+   ===================================================================== */
+.appbar { position: sticky; top: 12px; z-index: 40; max-width: 1360px; margin: 12px auto 0; display: flex; align-items: center; gap: 16px; padding: 10px 12px; background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); }
+.appbar-wrap { padding: 0 24px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--heading); }
+.logo-mark { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; font-weight: 700; font-size: 16px; }
+.nav { display: flex; gap: 4px; margin-left: 8px; }
+.nav a { height: 42px; padding: 0 20px; border-radius: 999px; display: inline-flex; align-items: center; font-weight: 700; }
+.nav a:hover { background: var(--inset-2); }
+.nav a[aria-current="page"] { background: var(--primary); color: var(--on-primary); }
+.spacer { flex: 1; }
+.me { width: 42px; height: 42px; border-radius: 50%; background: var(--tan); color: var(--cafe); display: grid; place-items: center; font-weight: 700; }
+.theme-wrap { position: relative; }
+.menu { position: absolute; right: 0; top: 50px; z-index: 50; min-width: 200px; padding: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-lg); animation: pop .14s ease-out; }
+.menu button { width: 100%; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border: 0; border-radius: 12px; background: none; cursor: pointer; font-weight: 700; text-align: left; }
+.menu button:hover { background: var(--inset-2); }
+.menu button .ico { width: 20px; text-align: center; }
+.menu button .chk { margin-left: auto; opacity: 0; }
+.menu button[aria-checked="true"] .chk { opacity: 1; }
+
+main { max-width: 1360px; margin: 0 auto; padding: 28px 24px 40px; }
+.proto-foot { max-width: 1360px; margin: 0 auto; padding: 0 24px 32px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.proto-foot button { border: 0; background: none; color: var(--muted); text-decoration: underline; cursor: pointer; font-size: 12px; padding: 0; }
+
+/* =====================================================================
+   Trips page
+   ===================================================================== */
+.page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 18px; }
+.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px; margin-bottom: 18px; }
+.toolbar .search { flex: 1 1 280px; }
+.toolbar .sort-m { display: none; }
+
+.table { padding: 14px 12px; }
+.trow { display: grid; grid-template-columns: minmax(230px, 2.3fr) 1.15fr .5fr 1.4fr 1.1fr 1.05fr 92px; align-items: center; gap: 18px; padding: 10px 12px; border-radius: 22px; }
+.trow.head { padding: 6px 12px 8px; }
+.trow:not(.head) { cursor: pointer; transition: background-color .12s; }
+.trow:not(.head):hover { background: var(--inset-2); }
+.trow:not(.head):hover .t-title { text-decoration: underline; }
+.th { border: 0; background: none; padding: 0; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--heading); text-align: left; }
+.th.static { cursor: default; }
+.th .arr { opacity: .45; letter-spacing: 0; }
+.th.on .arr { opacity: 1; }
+.t-trip { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.t-title { font-weight: 700; color: var(--heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-bar .meta { margin-top: 4px; }
+.t-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+.cards { display: none; flex-direction: column; gap: 12px; }
+.tcard { display: grid; grid-template-columns: 64px 1fr; gap: 14px; padding: 14px; border-radius: 24px; cursor: pointer; }
+.tcard .av { width: 64px; height: 64px; border-radius: 18px; font-size: 22px; }
+.tcard .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 2px 0 8px; }
+.fab { display: none; position: fixed; right: 16px; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 35; height: 56px; padding: 0 24px; border-radius: 999px; border: 0; background: var(--primary); color: var(--on-primary); font-weight: 700; font-size: 15px; box-shadow: var(--shadow-lg); cursor: pointer; }
+
+.empty { text-align: center; padding: 64px 24px; }
+.empty .e-ic { width: 120px; height: 120px; margin: 0 auto 18px; border-radius: 50%; background: var(--inset); display: grid; place-items: center; font-size: 40px; color: var(--muted); }
+.empty h2 { font-size: 20px; margin-bottom: 8px; }
+.empty p { color: var(--muted); margin: 0 auto 18px; max-width: 340px; }
+
+/* =====================================================================
+   Trip page
+   ===================================================================== */
+.trip-head { padding: 20px; margin-bottom: 18px; }
+.th-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.th-main { flex: 1 1 260px; min-width: 0; }
+.th-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.th-ready { flex: 0 1 240px; min-width: 180px; }
+.th-ready .top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.th-ready b { font-size: 13px; }
+.th-actions { display: flex; gap: 10px; }
+.th-notes { margin-top: 14px; padding: 10px 14px; border-radius: 14px; background: var(--inset-2); font-size: 13px; color: var(--muted); }
+.tabs-row { margin-top: 16px; }
+.th-actions .ico { display: none; }
+
+.subbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.subbar .left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- board ---------- */
+.board { position: relative; display: flex; gap: 14px; align-items: flex-start; overflow-x: auto; padding: 2px 2px 14px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.col { flex: 0 0 238px; display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 24px; background: var(--inset); scroll-snap-align: start; }
+.col.ideas { flex-basis: 262px; background: transparent; border: 1.5px dashed var(--border); }
+.col.today { box-shadow: inset 0 0 0 2px var(--accent); }
+.col-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 700; color: var(--heading); }
+.col-head .cnt { font-size: 12px; color: var(--muted); }
+.col-head .left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.col-head .gtitle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pill-count { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--primary); color: var(--on-primary); white-space: nowrap; }
+.pill-count.ok { background: var(--moss-tint); color: var(--text); }
+.today-tag { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: var(--primary); color: var(--on-primary); }
+.col-hint { font-size: 12.5px; color: var(--muted); margin-top: -4px; }
+.list { display: flex; flex-direction: column; gap: 10px; min-height: 12px; border-radius: 16px; transition: background-color .12s; }
+.list.drop-hl { background: var(--moss-tint); outline: 1.5px dashed var(--accent); outline-offset: 4px; }
+.empty-drop { font-size: 12.5px; color: var(--muted); text-align: center; padding: 14px 6px; border: 1.5px dashed var(--border); border-radius: 16px; }
+.list:has(.ph) .empty-drop { display: none; }
+.add-dashed { height: 40px; border-radius: 14px; border: 1.5px dashed var(--border); background: transparent; font-weight: 700; font-size: 13px; cursor: pointer; color: var(--text); }
+.add-dashed:hover { background: var(--card); }
+
+.icard { background: var(--card); border-radius: var(--r-item); padding: 12px 14px; cursor: grab; box-shadow: var(--shadow-sm); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: opacity .15s; }
+.icard:hover { box-shadow: 0 0 0 1.5px var(--border); }
+.icard .top { display: flex; justify-content: space-between; gap: 8px; font-weight: 700; color: var(--heading); }
+.icard .ttl { overflow-wrap: break-word; min-width: 0; }
+.icard .sub { font-size: 13px; color: var(--muted); margin-top: 3px; overflow-wrap: break-word; }
+.icard .cat { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.icard .cat .dot { margin-right: 7px; vertical-align: 0; }
+.icard .bk { font-size: 12px; font-weight: 700; margin-top: 4px; color: var(--ochre); }
+.icard .bk.ok { color: var(--accent); }
+.icard .bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 13px; }
+.icard .grip { color: var(--tan); font-size: 13px; letter-spacing: -2px; }
+.icard.dim { opacity: .28; }
+.icard.done .ttl { text-decoration: line-through; opacity: .6; }
+.icard.drag-src { opacity: .3; }
+.ghost { position: fixed; left: 0; top: 0; z-index: 200; pointer-events: none; margin: 0; border: 1.5px solid var(--heading); box-shadow: var(--shadow-lg); }
+.ph { flex: none; border-radius: var(--r-item); border: 1.5px dashed var(--accent); background: var(--moss-tint); }
+
+.crow { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow-sm); }
+.crow label { flex: 1; display: flex; align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
+.crow .body { display: flex; flex-direction: column; min-width: 0; }
+.crow .txt { overflow-wrap: break-word; }
+.crow.done .txt { text-decoration: line-through; color: var(--muted); }
+.crow .due { font-size: 12px; margin-top: 1px; color: var(--muted); white-space: nowrap; }
+.crow .due.overdue { color: var(--error); font-weight: 700; }
+.crow .mini-btn { opacity: 0; }
+.crow:hover .mini-btn, .crow:focus-within .mini-btn { opacity: 1; }
+.col-head .mini-btn { opacity: .5; }
+.col:hover .col-head .mini-btn { opacity: 1; }
+
+.inline-add { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; background: var(--card); }
+.inline-add .row { display: flex; gap: 6px; }
+.inline-add .err { color: var(--error); font-size: 12px; font-weight: 700; }
+.inline-add .err:empty { display: none; }
+
+/* mobile plan (hidden on desktop) */
+.mplan, .sheet { display: none; }
+
+/* ---------- expenses ---------- */
+.exp-layout { display: grid; grid-template-columns: 330px 1fr; gap: 18px; align-items: start; }
+.exp-side { display: flex; flex-direction: column; gap: 14px; }
+.spent-card { background: var(--primary); color: var(--on-primary); border-radius: var(--r-card); padding: 20px 20px 22px; }
+.spent-card .label { color: inherit; opacity: .8; }
+.spent-card .big { font-size: 36px; font-weight: 700; line-height: 1.1; margin: 6px 0 4px; }
+.spent-card .meta { color: inherit; opacity: .85; }
+.cats { padding: 18px; }
+.cats .label { margin-bottom: 14px; }
+.cat-row { margin-bottom: 14px; }
+.cat-row:last-child { margin-bottom: 0; }
+.cat-row .top { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-size: 14px; }
+.cat-row .top b { font-variant-numeric: tabular-nums; }
+.cat-row .bar > i { background: var(--c); }
+.exp-table { padding: 14px; }
+.exp-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.exp-tools .spacer { flex: 1; }
+.erow { display: grid; grid-template-columns: 96px 1fr 170px 120px 84px; align-items: center; gap: 12px; padding: 12px 12px; border-top: 1px solid var(--inset); }
+.erow.head { border-top: 0; padding-bottom: 8px; }
+.erow .amt { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.erow .what { font-weight: 700; color: var(--heading); overflow-wrap: anywhere; }
+.erow .acts { display: flex; gap: 6px; justify-content: flex-end; }
+.erow .acts .sq-btn { width: 34px; height: 34px; border-radius: 11px; }
+.erow .m-sub { display: none; }
+.exp-foot { display: flex; justify-content: space-between; align-items: center; padding: 14px 12px 4px; border-top: 1px solid var(--inset); }
+.exp-foot b { font-size: 17px; color: var(--heading); }
+
+/* ---------- checklist ---------- */
+.ck-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.ck-bar .spacer { flex: 1; }
+.board.ck { align-items: flex-start; }
+
+/* ---------- today ---------- */
+.today { max-width: 680px; margin: 0 auto; }
+.today-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+.now-card { background: var(--primary); color: var(--on-primary); border-radius: var(--r-card); padding: 22px; margin-bottom: 22px; }
+.now-card .label { color: inherit; opacity: .8; }
+.now-card h2 { color: inherit; font-size: 26px; margin: 8px 0 4px; }
+.now-card .meta { color: inherit; opacity: .85; }
+.now-card .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.now-card .btn { height: 48px; background: transparent; color: inherit; border-color: color-mix(in srgb, var(--on-primary) 55%, transparent); }
+.now-card .btn.fill { background: var(--bone); color: var(--kombu); border-color: var(--bone); }
+[data-theme="dark"] .now-card .btn.fill { background: var(--page); color: var(--heading); border-color: var(--page); }
+.sec-label { margin: 0 0 10px; }
+.stack { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+.nrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--r-item); background: var(--card); box-shadow: var(--shadow-sm); cursor: pointer; }
+.nrow b { color: var(--heading); display: block; }
+.next-trip { padding: 20px; margin-bottom: 22px; }
+.next-trip .row { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+
+/* ---------- bottom nav (mobile) ---------- */
+.bnav { display: none; }
+
+/* ---------- modal ---------- */
+.overlay { position: fixed; inset: 0; z-index: 100; background: var(--overlay); display: grid; place-items: center; padding: 16px; animation: fade .15s ease-out; }
+.modal { width: 100%; max-width: 440px; max-height: calc(100vh - 32px); overflow: auto; background: var(--card); border-radius: 32px; box-shadow: var(--shadow-lg); animation: pop .18s ease-out; }
+.modal form { padding: 26px; display: flex; flex-direction: column; gap: 14px; }
+.modal header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.modal header h2 { font-size: 22px; }
+.modal .msg { margin: 0; color: var(--text); line-height: 1.6; }
+.modal footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+.form-summary { padding: 10px 14px; border-radius: 14px; background: var(--inset-2); color: var(--error); font-weight: 700; font-size: 13px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > label, .field > .flabel { font-weight: 700; font-size: 13.5px; color: var(--heading); }
+.field .opt { color: var(--muted); font-weight: 400; }
+.field.invalid .input, .field.invalid .select, .field.invalid .textarea { border: 1.5px solid var(--error); }
+.field .err { color: var(--error); font-size: 12.5px; font-weight: 700; }
+.field .err:empty { display: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips label { cursor: pointer; }
+.chips input { position: absolute; opacity: 0; pointer-events: none; }
+.chips span { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); font-weight: 700; font-size: 12.5px; }
+.chips input:checked + span { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.chips input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.check-line { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 13.5px; }
+.check-line .ck { margin-top: 1px; }
+.pillseg input { position: absolute; opacity: 0; pointer-events: none; }
+.pillseg label { padding: 0; }
+.pillseg label span { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 999px; padding: 0 12px; }
+
+/* ---------- toast ---------- */
+.toast { position: fixed; left: 50%; bottom: 24px; z-index: 150; transform: translate(-50%, 16px); opacity: 0; pointer-events: none; display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 999px; background: var(--heading); color: var(--page); font-weight: 700; font-size: 13.5px; box-shadow: var(--shadow-lg); transition: opacity .2s, transform .2s; max-width: calc(100vw - 32px); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.toast button { border: 0; background: none; color: inherit; text-decoration: underline; font-weight: 700; cursor: pointer; padding: 0; }
+
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+
+/* =====================================================================
+   Responsive
+   ===================================================================== */
+@media (max-width: 1100px) {
+  .trow { grid-template-columns: minmax(200px, 2fr) 1.1fr .45fr 1.3fr 1fr 1fr 88px; gap: 12px; }
+  .exp-layout { grid-template-columns: 1fr; }
+  .exp-side { display: grid; grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 860px) {
+  .table { display: none; }
+  .cards { display: flex; }
+  .toolbar .sort-m { display: inline-block; }
+}
+@media (max-width: 720px) {
+  .appbar-wrap { padding: 0 12px; }
+  .appbar { top: 8px; margin-top: 8px; gap: 10px; padding: 8px; }
+  .nav, .me, .logo-name { display: none; }
+  main { padding: 20px 16px calc(110px + env(safe-area-inset-bottom)); }
+  main.has-sheet { padding-bottom: calc(230px + env(safe-area-inset-bottom)); }
+  .proto-foot { padding: 0 16px calc(110px + env(safe-area-inset-bottom)); }
+  .page-head .btn-new { display: none; }
+  .fab { display: block; }
+  .toolbar { padding: 10px; border-radius: 22px; }
+  .toolbar .pillseg { order: 3; width: 100%; overflow-x: auto; }
+  .toolbar .sort-m { flex: 1; }
+
+  .trip-head { padding: 16px; border-radius: 24px; }
+  .th-row { gap: 12px; }
+  .th-row > .circle-btn { order: 0; }
+  .th-row .av { display: none; }
+  .th-actions { order: 1; margin-left: auto; }
+  .th-main { flex: 1 1 100%; order: 2; }
+  .today-head .btn { display: none; }
+  .th-actions .lbl { display: none; }
+  .th-actions .ico { display: inline; }
+  .th-actions .btn { width: 42px; padding: 0; }
+  .th-ready { order: 4; flex: 1 1 100%; }
+  .tabs-row { display: none; }
+  h1 { font-size: 24px; }
+
+  .board.plan, .plan-subbar { display: none; }
+  .mplan { display: block; }
+  .mchips { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px 16px; padding: 0 16px 4px; scrollbar-width: none; }
+  .mchips button { flex: none; height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .mchips button.before { background: var(--inset); border-color: var(--inset); }
+  .mchips button[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+  .mday-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .fab-round { width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--primary); color: var(--on-primary); font-size: 24px; font-weight: 700; cursor: pointer; flex: none; }
+  .sheet { display: block; position: fixed; left: 12px; right: 12px; bottom: calc(90px + env(safe-area-inset-bottom)); z-index: 30; padding: 10px 16px 14px; border-radius: 24px 24px 18px 18px; background: var(--inset); box-shadow: var(--shadow-lg); }
+  .sheet .handle { width: 44px; height: 5px; border-radius: 9px; background: var(--border); margin: 0 auto 10px; }
+  .sheet .head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .sheet .list.chipsx { flex-direction: row; gap: 8px; overflow-x: auto; padding: 2px; min-height: 42px; scrollbar-width: none; }
+  .ichip { flex: none; height: 40px; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: var(--card); border: 1px solid var(--border); font-weight: 700; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; white-space: nowrap; }
+  .ichip.add { border-style: dashed; background: transparent; cursor: pointer; }
+
+  .exp-side { grid-template-columns: 1fr; }
+  .erow.head { display: none; }
+  .erow { grid-template-columns: 1fr auto auto; padding: 12px 6px; }
+  .erow .d-date, .erow .d-cat { display: none; }
+  .erow .m-sub { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .exp-tools .select { flex: 1; }
+  .exp-tools .spacer { display: none; }
+  .exp-tools .btn { width: 100%; }
+
+  .board.ck { flex-direction: column; overflow: visible; }
+  .board.ck .col { flex: none; width: 100%; }
+
+  .bnav { display: flex; position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40; padding: 8px; border-radius: 28px; background: var(--card); box-shadow: var(--shadow-lg); }
+  .bnav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 2px 0; }
+  .bnav a .ic { width: 52px; height: 32px; border-radius: 999px; display: grid; place-items: center; font-size: 15px; }
+  .bnav a[aria-current="page"] .ic { background: var(--primary); color: var(--on-primary); }
+  .toast { bottom: calc(100px + env(safe-area-inset-bottom)); }
+  .grid2 { grid-template-columns: 1fr 1fr; }
+  .overlay { place-items: end center; padding: 0; }
+  .modal { border-radius: 28px 28px 0 0; max-height: 92vh; }
+  .modal form { padding: 22px 18px calc(22px + env(safe-area-inset-bottom)); }
+  .crow .mini-btn, .col-head .mini-btn { opacity: 1; }
+}
+@media (hover: none) { .crow .mini-btn { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="appbar-wrap"><header class="appbar" id="appbar"></header></div>
+<main id="app"></main>
+<footer class="proto-foot" id="foot"></footer>
+<nav class="bnav" id="bnav" aria-label="Mobile"></nav>
+<div id="modal-root"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   i18n
+   ===================================================================== */
+const DICT = {
+  ru: {
+    nav_trips: 'Поездки', nav_today: 'Сегодня',
+    tripsCount: { one: '{n} поездка', few: '{n} поездки', many: '{n} поездок', other: '{n} поездки' },
+    nowCount: '{n} сейчас', soonCount: '{n} скоро',
+    newTrip: 'Новая поездка', search: 'Поиск по названию или месту',
+    st_all: 'Все', st_upcoming: 'Скоро', st_ongoing: 'Сейчас', st_past: 'Прошли', badge_past: 'Прошла',
+    inDays: 'Через {n} дн.', tomorrow: 'Завтра',
+    col_trip: 'Поездка', col_dates: 'Даты', col_days: 'Дней', col_ready: 'Готово', col_spent: 'Потрачено', col_status: 'Статус',
+    readyPct: '{p}% готово', readyNone: 'чек-лист пуст',
+    expensesCount: { one: '{n} расход', few: '{n} расхода', many: '{n} расходов', other: '{n} расхода' },
+    days: { one: '{n} день', few: '{n} дня', many: '{n} дней', other: '{n} дня' },
+    stops: { one: '{n} пункт', few: '{n} пункта', many: '{n} пунктов', other: '{n} пункта' },
+    sort_dates_asc: 'Сортировка: даты ↑', sort_dates_desc: 'Сортировка: даты ↓', sort_title_asc: 'Сортировка: название', sort_ready_desc: 'Сортировка: готовность', sort_spent_desc: 'Сортировка: траты',
+    noTrips: 'Пока нет поездок', noTripsHint: 'Создайте первую поездку: направление и даты — и можно планировать.',
+    noResults: 'Ничего не найдено', noResultsQ: 'Нет поездок по запросу «{q}» со статусом «{s}»', noResultsS: 'Нет поездок со статусом «{s}»', resetFilters: 'Сбросить фильтры',
+    ready: 'Готовность', edit: 'Изменить', delete: 'Удалить', cancel: 'Отмена', save: 'Сохранить', add: 'Добавить', close: 'Закрыть', createTrip: 'Создать поездку', back: 'Назад', open: 'Открыть',
+    tab_plan: 'План', tab_expenses: 'Расходы', tab_checklist: 'Чек-лист',
+    soonIn: 'Скоро · через {n} дн.', soonTomorrow: 'Скоро · завтра',
+    daysRange: 'Дни {a}–{b} из {n}', catAll: 'Категория: все',
+    beforeTrip: 'Перед поездкой', beforeShort: 'Перед', left: '{n} осталось', allDone: 'всё готово',
+    addTask: '+ Задача', addTaskDated: '+ Задача со сроком', day: 'День {n}', today: 'сегодня',
+    ideas: 'Идеи', notScheduled: 'Не в плане', ideasHint: 'Сохраняйте места здесь и перетаскивайте в день, когда решите.', ideasSheetHint: 'перетащите в день',
+    addIdea: '+ Идея', addStop: '+ Добавить', emptyDay: 'Перетащите сюда пункт или идею',
+    ic_sight: 'Достопримечательность', ic_food: 'Еда', ic_transport: 'Транспорт', ic_stay: 'Жильё', ic_activity: 'Досуг',
+    needsBooking: 'нужна бронь', needsBookingBy: 'нужна бронь · до {d}', booked: '✓ забронировано', bookPrefix: 'Забронировать: ',
+    mDayHint: '{s} · удерживайте, чтобы переставить', mBeforeHint: 'задачи до начала поездки',
+    f_title: 'Название', f_destination: 'Направление', f_start: 'Начало', f_end: 'Конец', f_currency: 'Валюта', f_notes: 'Заметки',
+    ph_title: 'Лиссабон и Порту', ph_destination: 'Город или страна', ph_notes: 'Идеи, ссылки, напоминания',
+    optional: 'необязательно', editTrip: 'Изменить поездку',
+    addStopTitle: 'Добавить пункт или идею', editStop: 'Изменить пункт', f_where: 'Куда добавить', where_ideas: 'В идеи', where_day: 'В день',
+    f_day: 'День', f_time: 'Время', f_duration: 'Длительность', f_category: 'Категория', f_location: 'Место / адрес', f_note: 'Заметка',
+    f_needsBooking: 'Нужна бронь → задача в «Перед поездкой»', f_bookBy: 'Забронировать до', f_done: 'Пункт пройден',
+    ph_item: 'Монастырь Жеронимуш', ph_location: 'Praça do Império', ph_note: 'Билеты в почте',
+    addExpense: 'Добавить расход', editExpense: 'Изменить расход', f_what: 'Что', f_amount: 'Сумма, {c}', f_date: 'Дата', ph_what: 'Такси из аэропорта', expAdd: '+ Расход',
+    spent: 'Потрачено', perDay: '~{a} в день', byCategory: 'По категориям',
+    cat_all: 'Все категории', cat_transport: 'Транспорт', cat_stay: 'Жильё', cat_food: 'Еда', cat_activities: 'Развлечения', cat_shopping: 'Покупки', cat_other: 'Другое',
+    es_dateDesc: 'Дата ↓', es_dateAsc: 'Дата ↑', es_amountDesc: 'Сумма ↓', es_amountAsc: 'Сумма ↑',
+    col_date: 'Дата', col_what: 'Что', col_category: 'Категория', col_amount: 'Сумма',
+    total: 'Итого {a}', noExpenses: 'Расходов пока нет', noExpensesHint: 'Добавляйте траты по ходу поездки — суммы по категориям посчитаются сами.', noMatch: 'Нет расходов в этой категории',
+    ck_all: 'Все', ck_todo: 'Не готово', ck_done: 'Готово', ckSummary: 'Упаковано {a} из {b} · Задачи {c} из {d}',
+    addGroup: '+ Группа', addItem: '+ Пункт', tasks: 'Задачи',
+    g_docs: 'Документы', g_clothes: 'Одежда', g_tech: 'Техника', g_toiletries: 'Гигиена',
+    newGroup: 'Новая группа', renameGroup: 'Переименовать группу', f_groupName: 'Название группы', ph_group: 'Например, Аптечка',
+    deleteGroupQ: 'Удалить группу?', deleteGroupMsg: '«{t}» и все пункты в ней будут удалены.',
+    ph_packing: 'Что взять?', ph_task: 'Что сделать?', emptyGroup: 'Пусто',
+    deleteTripQ: 'Удалить поездку?', deleteTripMsg: '«{t}» вместе с планом, идеями, расходами и чек-листом будет удалена. Это нельзя отменить.',
+    deleteStopQ: 'Удалить пункт?', deleteExpenseQ: 'Удалить расход?', deleteMsg: '«{t}» будет удалён.',
+    fixN: { one: 'Исправьте {n} поле, чтобы сохранить', few: 'Исправьте {n} поля, чтобы сохранить', many: 'Исправьте {n} полей, чтобы сохранить', other: 'Исправьте {n} поля, чтобы сохранить' },
+    errRequired: 'Обязательное поле', errTitle: 'Название: от 2 до 80 символов', errDest: 'Укажите направление', errDate: 'Укажите дату',
+    errEndBefore: 'Конец не может быть раньше начала', errTooLong: 'Поездка — не длиннее 60 дней', errNotes: 'Не больше 1000 символов',
+    errAmount: 'Сумма должна быть больше 0', errDateRange: 'Дата вне поездки', errWhat: 'Укажите, на что потрачено', errName: 'Введите название',
+    saved: 'Сохранено', created: 'Поездка создана', deleted: 'Удалено', movedToIdeas: 'В идеи перенесено пунктов: {n}', taskCreated: 'Задача добавлена в «Перед поездкой»', markedDone: 'Отмечено: {t}', undo: 'Отменить',
+    theme: 'Тема', th_system: 'Как в системе', th_light: 'Светлая', th_dark: 'Тёмная',
+    todayTitle: 'Сегодня · день {a} из {b}', todayPlain: 'Сегодня', nowLbl: 'Сейчас · {r}', nextLbl: 'Далее · {r}', nextNoTime: 'Далее',
+    notes: 'Заметки', doneBtn: 'Готово ✓', next: 'Дальше', dontForget: 'Не забыть сегодня', nothingToday: 'На сегодня задач нет',
+    dayDone: 'На сегодня всё', dayDoneHint: 'Все пункты дня отмечены. Можно отдыхать.', noStopsToday: 'На сегодня ничего не запланировано', openPlan: 'Открыть план',
+    nextTrip: 'Следующая поездка', noTripsNow: 'Сейчас поездок нет', noTripsNowHint: 'Когда начнётся поездка, здесь появится план на день.',
+    notFound: 'Поездка не найдена', notFoundHint: 'Возможно, она была удалена.',
+    resetDemo: 'Сбросить демо-данные', resetDemoQ: 'Сбросить данные?', resetDemoMsg: 'Все изменения заменятся демо-данными.', reset: 'Сбросить',
+    protoNote: 'Прототип waypoint · данные в localStorage · сегодня {d}',
+    dur_h: '{h} ч', dur_m: '{m} мин',
+  },
+  en: {
+    nav_trips: 'Trips', nav_today: 'Today',
+    tripsCount: { one: '{n} trip', other: '{n} trips' },
+    nowCount: '{n} now', soonCount: '{n} upcoming',
+    newTrip: 'New trip', search: 'Search by name or destination',
+    st_all: 'All', st_upcoming: 'Upcoming', st_ongoing: 'Now', st_past: 'Past', badge_past: 'Past',
+    inDays: 'In {n} days', tomorrow: 'Tomorrow',
+    col_trip: 'Trip', col_dates: 'Dates', col_days: 'Days', col_ready: 'Ready', col_spent: 'Spent', col_status: 'Status',
+    readyPct: '{p}% ready', readyNone: 'no checklist',
+    expensesCount: { one: '{n} expense', other: '{n} expenses' },
+    days: { one: '{n} day', other: '{n} days' },
+    stops: { one: '{n} stop', other: '{n} stops' },
+    sort_dates_asc: 'Sort: dates ↑', sort_dates_desc: 'Sort: dates ↓', sort_title_asc: 'Sort: name', sort_ready_desc: 'Sort: readiness', sort_spent_desc: 'Sort: spent',
+    noTrips: 'No trips yet', noTripsHint: 'Create your first trip: a destination and dates — then start planning.',
+    noResults: 'Nothing found', noResultsQ: 'No trips match “{q}” with status {s}', noResultsS: 'No trips with status {s}', resetFilters: 'Reset filters',
+    ready: 'Ready', edit: 'Edit', delete: 'Delete', cancel: 'Cancel', save: 'Save', add: 'Add', close: 'Close', createTrip: 'Create trip', back: 'Back', open: 'Open',
+    tab_plan: 'Plan', tab_expenses: 'Expenses', tab_checklist: 'Checklist',
+    soonIn: 'Upcoming · in {n} days', soonTomorrow: 'Upcoming · tomorrow',
+    daysRange: 'Days {a}–{b} of {n}', catAll: 'Category: all',
+    beforeTrip: 'Before the trip', beforeShort: 'Before', left: '{n} left', allDone: 'all done',
+    addTask: '+ Task', addTaskDated: '+ Task with date', day: 'Day {n}', today: 'today',
+    ideas: 'Ideas', notScheduled: 'Not scheduled', ideasHint: 'Save places here, drag into a day when you decide.', ideasSheetHint: 'drag up into the day',
+    addIdea: '+ Idea', addStop: '+ Add', emptyDay: 'Drop a stop or an idea here',
+    ic_sight: 'Sight', ic_food: 'Food', ic_transport: 'Transport', ic_stay: 'Stay', ic_activity: 'Activity',
+    needsBooking: 'needs booking', needsBookingBy: 'needs booking · by {d}', booked: '✓ booked', bookPrefix: 'Book: ',
+    mDayHint: '{s} · long-press to reorder', mBeforeHint: 'tasks before the trip starts',
+    f_title: 'Name', f_destination: 'Destination', f_start: 'Start', f_end: 'End', f_currency: 'Currency', f_notes: 'Notes',
+    ph_title: 'Lisbon & Porto', ph_destination: 'City or country', ph_notes: 'Ideas, links, reminders',
+    optional: 'optional', editTrip: 'Edit trip',
+    addStopTitle: 'Add stop or idea', editStop: 'Edit stop', f_where: 'Where to put it', where_ideas: 'Ideas', where_day: 'A day',
+    f_day: 'Day', f_time: 'Time', f_duration: 'Duration', f_category: 'Category', f_location: 'Place / address', f_note: 'Note',
+    f_needsBooking: 'Needs booking → add task to “Before the trip”', f_bookBy: 'Book by', f_done: 'Stop is done',
+    ph_item: 'Jerónimos Monastery', ph_location: 'Praça do Império', ph_note: 'Tickets in email',
+    addExpense: 'Add expense', editExpense: 'Edit expense', f_what: 'What', f_amount: 'Amount, {c}', f_date: 'Date', ph_what: 'Taxi from airport', expAdd: '+ Expense',
+    spent: 'Spent', perDay: '~{a} per day', byCategory: 'By category',
+    cat_all: 'All categories', cat_transport: 'Transport', cat_stay: 'Stay', cat_food: 'Food', cat_activities: 'Activities', cat_shopping: 'Shopping', cat_other: 'Other',
+    es_dateDesc: 'Date ↓', es_dateAsc: 'Date ↑', es_amountDesc: 'Amount ↓', es_amountAsc: 'Amount ↑',
+    col_date: 'Date', col_what: 'What', col_category: 'Category', col_amount: 'Amount',
+    total: 'Total {a}', noExpenses: 'No expenses yet', noExpensesHint: 'Add spending as you go — category totals are calculated for you.', noMatch: 'No expenses in this category',
+    ck_all: 'All', ck_todo: 'To do', ck_done: 'Done', ckSummary: 'Packed {a} of {b} · Tasks {c} of {d}',
+    addGroup: '+ Group', addItem: '+ Item', tasks: 'Tasks',
+    g_docs: 'Documents', g_clothes: 'Clothes', g_tech: 'Tech', g_toiletries: 'Toiletries',
+    newGroup: 'New group', renameGroup: 'Rename group', f_groupName: 'Group name', ph_group: 'e.g. First aid',
+    deleteGroupQ: 'Delete group?', deleteGroupMsg: '“{t}” and all its items will be deleted.',
+    ph_packing: 'What to pack?', ph_task: 'What to do?', emptyGroup: 'Empty',
+    deleteTripQ: 'Delete trip?', deleteTripMsg: '“{t}” and its plan, ideas, expenses and checklist will be deleted. This can’t be undone.',
+    deleteStopQ: 'Delete stop?', deleteExpenseQ: 'Delete expense?', deleteMsg: '“{t}” will be deleted.',
+    fixN: { one: 'Fix {n} field to save', other: 'Fix {n} fields to save' },
+    errRequired: 'Required', errTitle: 'Add a title (2–80 characters)', errDest: 'Enter a destination', errDate: 'Pick a date',
+    errEndBefore: 'End can’t be before start', errTooLong: 'A trip can’t be longer than 60 days', errNotes: 'Max 1000 characters',
+    errAmount: 'Must be greater than 0', errDateRange: 'Date is outside the trip', errWhat: 'Say what it was for', errName: 'Enter a name',
+    saved: 'Saved', created: 'Trip created', deleted: 'Deleted', movedToIdeas: 'Moved to ideas: {n}', taskCreated: 'Task added to “Before the trip”', markedDone: 'Done: {t}', undo: 'Undo',
+    theme: 'Theme', th_system: 'System', th_light: 'Light', th_dark: 'Dark',
+    todayTitle: 'Today · Day {a} of {b}', todayPlain: 'Today', nowLbl: 'Now · {r}', nextLbl: 'Next · {r}', nextNoTime: 'Next',
+    notes: 'Notes', doneBtn: 'Done ✓', next: 'Next', dontForget: 'Don’t forget today', nothingToday: 'No tasks for today',
+    dayDone: 'All done for today', dayDoneHint: 'Every stop is checked off. Time to relax.', noStopsToday: 'Nothing planned for today', openPlan: 'Open plan',
+    nextTrip: 'Next trip', noTripsNow: 'No trips right now', noTripsNowHint: 'When a trip starts, today’s plan will show up here.',
+    notFound: 'Trip not found', notFoundHint: 'It may have been deleted.',
+    resetDemo: 'Reset demo data', resetDemoQ: 'Reset data?', resetDemoMsg: 'All changes will be replaced with demo data.', reset: 'Reset',
+    protoNote: 'waypoint prototype · data in localStorage · today {d}',
+    dur_h: '{h}h', dur_m: '{m}m',
+  },
+};
+const L = () => state.settings.language;
+function t(key, p = {}) {
+  const s = DICT[L()][key] ?? DICT.en[key] ?? key;
+  return String(s).replace(/\{(\w+)\}/g, (_, k) => (p[k] ?? ''));
+}
+function tp(key, n, p = {}) {
+  const forms = DICT[L()][key];
+  const cat = new Intl.PluralRules(L()).select(n);
+  return (forms[cat] || forms.other).replace(/\{(\w+)\}/g, (_, k) => (k === 'n' ? n : p[k] ?? ''));
+}
+
+/* =====================================================================
+   Utils
+   ===================================================================== */
+const pad = (n) => String(n).padStart(2, '0');
+const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseISO = (s) => new Date(s + 'T00:00:00');
+const addDays = (iso, n) => { const d = parseISO(iso); d.setDate(d.getDate() + n); return toISO(d); };
+const diffDays = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
+const rangeDates = (s, e) => Array.from({ length: diffDays(s, e) + 1 }, (_, i) => addDays(s, i));
+const TODAY = toISO(new Date());
+const THIS_YEAR = new Date().getFullYear();
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+const mon = (d) => new Intl.DateTimeFormat(L(), { month: 'short' }).format(d).replace('.', '');
+const wd = (iso) => cap(new Intl.DateTimeFormat(L(), { weekday: 'short' }).format(parseISO(iso)).replace('.', ''));
+const fmtShort = (iso) => { const d = parseISO(iso); return `${d.getDate()} ${mon(d)}`; };
+function fmtRange(s, e, forceYear = false) {
+  const a = parseISO(s), b = parseISO(e);
+  const year = forceYear || a.getFullYear() !== THIS_YEAR || b.getFullYear() !== THIS_YEAR;
+  let out = a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()
+    ? `${a.getDate()}–${b.getDate()} ${mon(b)}`
+    : `${a.getDate()} ${mon(a)} – ${b.getDate()} ${mon(b)}`;
+  return year ? `${out} ${b.getFullYear()}` : out;
+}
+const fmtLong = (iso) => cap(new Intl.DateTimeFormat(L(), { weekday: 'short', day: 'numeric', month: 'short' }).format(parseISO(iso)).replace(/\./g, ''));
+const money = (n, cur) => new Intl.NumberFormat(L(), { style: 'currency', currency: cur, maximumFractionDigits: n % 1 ? 2 : 0 }).format(n);
+const toMin = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
+const fromMin = (m) => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
+function fmtDur(min) {
+  if (!min) return '';
+  const h = Math.floor(min / 60), m = min % 60;
+  return [h ? t('dur_h', { h }) : '', m ? t('dur_m', { m }) : ''].filter(Boolean).join(' ');
+}
+const nowMinutes = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+
+const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'GEL', 'TRY', 'THB', 'JPY'];
+const ITEM_CATS = ['sight', 'food', 'transport', 'stay', 'activity'];
+const EXP_CATS = ['transport', 'stay', 'food', 'activities', 'shopping', 'other'];
+const EXP_COLOR = { transport: 'transport', stay: 'stay', food: 'food', activities: 'activity', shopping: 'shopping', other: 'other' };
+const DURATIONS = [15, 30, 45, 60, 90, 120, 180, 240, 360, 480];
+
+/* =====================================================================
+   State & persistence
+   ===================================================================== */
+const STORAGE_KEY = 'waypoint-prototype:v2';
+
+function defaultGroups(lang) {
+  const tt = (k) => DICT[lang][k];
+  return [
+    { id: uid(), kind: 'tasks', title: '', items: [] },
+    ...['g_docs', 'g_clothes', 'g_tech', 'g_toiletries'].map((k) => ({ id: uid(), kind: 'packing', title: tt(k), items: [] })),
+  ];
+}
+
+function seed(lang) {
+  const P = (ru, en) => (lang === 'ru' ? ru : en);
+  const trips = [];
+  const mk = (title, destination, s, e, currency, notes = '') => {
+    const tr = { id: uid(), title, destination, startDate: addDays(TODAY, s), endDate: addDays(TODAY, e), currency, notes, createdAt: Date.now(), updatedAt: Date.now(), days: [], ideaIds: [], items: {}, expenses: [], groups: [] };
+    tr.days = rangeDates(tr.startDate, tr.endDate).map((date) => ({ id: uid(), date, itemIds: [] }));
+    trips.push(tr);
+    return tr;
+  };
+  const stop = (tr, where, title, category, time = '', durationMin = '', extra = {}) => {
+    const it = { id: uid(), title, category, time, durationMin, location: '', note: '', needsBooking: false, bookingTaskId: '', done: false, dayId: null, ...extra };
+    tr.items[it.id] = it;
+    if (where === 'idea') tr.ideaIds.push(it.id);
+    else { const d = tr.days[where]; d.itemIds.push(it.id); it.dayId = d.id; }
+    return it;
+  };
+  const exp = (tr, title, amount, category, dayIdx = 0) => tr.expenses.push({ id: uid(), title, amount, category, date: tr.days[Math.min(dayIdx, tr.days.length - 1)].date });
+  const checklist = (tr, tasks, packs) => {
+    tr.groups = [
+      { id: uid(), kind: 'tasks', title: '', items: tasks.map(([text, done, due]) => ({ id: uid(), text, done: !!done, dueDate: due == null ? '' : addDays(TODAY, due), sourceItemId: '' })) },
+      ...packs.map(([title, items]) => ({ id: uid(), kind: 'packing', title, items: items.map(([text, done]) => ({ id: uid(), text, done: !!done, dueDate: '', sourceItemId: '' })) })),
+    ];
+    return tr.groups[0];
+  };
+  const link = (item, task) => { item.needsBooking = true; item.bookingTaskId = task.id; task.sourceItemId = item.id; };
+  const G = { docs: P('Документы', 'Documents'), clothes: P('Одежда', 'Clothes'), tech: P('Техника', 'Tech'), toil: P('Гигиена', 'Toiletries') };
+
+  /* Crete — past, over-spent-ish, all ready */
+  const cr = mk(P('Крит всей семьёй', 'Crete with family'), P('Ираклион, Греция', 'Heraklion, Greece'), -78, -68, 'EUR');
+  stop(cr, 0, P('Прилёт в HER', 'Land at HER'), 'transport', '10:20', 30);
+  stop(cr, 0, P('Вилла в Херсониссосе', 'Villa in Hersonissos'), 'stay', '15:00');
+  stop(cr, 1, P('Кносский дворец', 'Knossos Palace'), 'sight', '09:30', 150);
+  stop(cr, 3, P('Пляж Балос', 'Balos beach'), 'activity', '10:00', 300);
+  exp(cr, P('Авиабилеты ×4', 'Flights ×4'), 980, 'transport'); exp(cr, P('Вилла, 10 ночей', 'Villa, 10 nights'), 1400, 'stay');
+  exp(cr, P('Продукты и таверны', 'Groceries & tavernas'), 620, 'food', 3); exp(cr, P('Лодка на Балос', 'Boat to Balos'), 180, 'activities', 3); exp(cr, P('Сувениры', 'Souvenirs'), 120, 'shopping', 9);
+  checklist(cr, [[P('Забронировать виллу', 'Book the villa'), true, -120]], [[G.docs, [[P('Паспорта', 'Passports'), true]]], [G.clothes, [[P('Купальники', 'Swimwear'), true]]]]);
+
+  /* Berlin — ongoing (today is day 3) */
+  const be = mk(P('Берлин: конференция', 'Berlin tech conference'), P('Берлин, Германия', 'Berlin, Germany'), -2, 2, 'EUR', P('Бейдж — на стойке регистрации, зал B.', 'Pick up the badge at registration, hall B.'));
+  stop(be, 0, P('Перелёт TLV → BER', 'Flight TLV → BER'), 'transport', '07:10', 240);
+  stop(be, 0, P('Отель у Александерплац', 'Hotel at Alexanderplatz'), 'stay', '14:00', '', { note: P('заселение', 'check-in') });
+  stop(be, 1, P('Воркшоп: TypeScript', 'Workshop: TypeScript'), 'activity', '10:00', 180);
+  stop(be, 1, P('Обед, Markthalle Neun', 'Lunch, Markthalle Neun'), 'food', '13:30', 60);
+  stop(be, 2, P('Открытие и keynote', 'Opening & keynote'), 'activity', '09:30', 90, { location: P('Estrel, зал A', 'Estrel, hall A') });
+  stop(be, 2, P('Обед с командой', 'Team lunch'), 'food', '12:30', 60);
+  stop(be, 2, P('Доклады: фронтенд-трек', 'Talks: frontend track'), 'activity', '14:00', 180, { note: P('React Compiler в 15:00', 'React Compiler at 15:00') });
+  stop(be, 2, P('Бранденбургские ворота', 'Brandenburg Gate'), 'sight', '18:30', 45);
+  stop(be, 2, P('Ужин в Кройцберге', 'Dinner in Kreuzberg'), 'food', '20:00', 90);
+  stop(be, 3, P('Музейный остров', 'Museum Island'), 'sight', '10:00', 180);
+  stop(be, 4, P('Перелёт BER → TLV', 'Flight BER → TLV'), 'transport', '16:40', 240);
+  stop(be, 'idea', P('Берлинская стена', 'East Side Gallery'), 'sight');
+  exp(be, P('Авиабилеты', 'Flights'), 340, 'transport'); exp(be, P('Отель, 4 ночи', 'Hotel, 4 nights'), 520, 'stay');
+  exp(be, P('Обед на воркшопе', 'Workshop lunch'), 24, 'food', 1); exp(be, P('Проездной U-Bahn', 'U-Bahn pass'), 29, 'transport', 1); exp(be, P('Ужин', 'Dinner'), 38, 'food', 1); exp(be, P('Кофе', 'Coffee'), 7.5, 'food', 2);
+  checklist(be, [[P('Зарегистрироваться на конференцию', 'Register for the conference'), true, -40], [P('Распечатать бейдж', 'Print the badge'), true, 0], [P('Купить подарки домой', 'Buy gifts for home'), false, 0]],
+    [[G.docs, [[P('Паспорт', 'Passport'), true], [P('Билет на конференцию', 'Conference ticket'), true]]], [G.tech, [[P('Ноутбук', 'Laptop'), true], [P('Зарядки', 'Chargers'), true]]], [G.clothes, [[P('Пиджак', 'Blazer'), true]]]]);
+
+  /* Lisbon & Porto — nearest upcoming (in 12 days) */
+  const li = mk(P('Лиссабон и Порту', 'Lisbon & Porto'), P('Лиссабон, Португалия', 'Lisbon, Portugal'), 12, 19, 'EUR', P('Карта Viva Viagem для метро и трамваев. В Синтру — с утра, пока нет толп.', 'Get a Viva Viagem card for metro & trams. Go to Sintra early, before the crowds.'));
+  const liTasks = checklist(li,
+    [[P('Купить билеты в Жеронимуш', 'Book Jerónimos tickets'), false, 5], [P('Купить eSIM', 'Buy eSIM'), false, 10], [P('Распечатать билеты на поезд', 'Print train tickets'), false, 15], [P('Купить авиабилеты', 'Book flights'), true, -20], [P('Забронировать Casa Alfama', 'Book Casa Alfama'), true, -18]],
+    [[G.docs, [[P('Паспорта', 'Passports'), true], [P('Страховка', 'Insurance'), true], [P('Распечатки броней', 'Bookings printout'), true]]],
+     [G.clothes, [[P('Лёгкая куртка', 'Light jacket'), true], [P('Удобная обувь', 'Walking shoes'), true], [P('Купальник', 'Swimwear'), false]]],
+     [G.tech, [[P('Зарядки', 'Chargers'), true], [P('Адаптер тип F', 'Adapter type F'), false], [P('Пауэрбанк', 'Power bank'), false]]],
+     [G.toil, [[P('Солнцезащитный крем', 'Sunscreen'), false]]]]);
+  stop(li, 0, P('Прилёт в LIS', 'Land at LIS'), 'transport', '11:40', 30);
+  stop(li, 0, 'Casa Alfama', 'stay', '13:00', '', { note: P('заселение', 'check-in'), location: 'Rua de São Miguel' });
+  stop(li, 0, P('Ужин, Ramiro', 'Dinner, Ramiro'), 'food', '20:00', 90);
+  stop(li, 1, 'Pastéis de Belém', 'food', '09:30', 30);
+  const jer = stop(li, 1, P('Монастырь Жеронимуш', 'Jerónimos Monastery'), 'sight', '10:00', 90, { note: P('билеты в почте', 'tickets in email'), location: 'Praça do Império' });
+  link(jer, liTasks.items[0]);
+  stop(li, 1, 'LX Factory', 'activity', '14:00', 120);
+  stop(li, 3, P('Пляж в Кашкайше', 'Cascais beach'), 'activity', '11:00', 240);
+  stop(li, 4, P('Поезд LIS → OPO', 'Train LIS → OPO'), 'transport', '09:00', 180);
+  stop(li, 4, P('Набережная Рибейра', 'Ribeira riverside'), 'sight', '16:00', 90);
+  stop(li, 5, 'Livraria Lello', 'sight', '10:00', 45, { note: P('нужен онлайн-билет', 'online ticket needed') });
+  stop(li, 7, P('Перелёт OPO → TLV', 'Flight OPO → TLV'), 'transport', '18:20', 300);
+  stop(li, 'idea', P('Дворцы Синтры', 'Sintra palaces'), 'sight');
+  stop(li, 'idea', P('Трамвай 28', 'Tram 28 ride'), 'activity');
+  stop(li, 'idea', P('Вечер фаду', 'Fado evening'), 'activity');
+  stop(li, 'idea', P('Винный тур по Дору', 'Douro wine tour'), 'activity');
+  exp(li, P('Авиабилеты TLV → LIS', 'Flights TLV → LIS'), 290, 'transport'); exp(li, P('Casa Alfama, 4 ночи', 'Casa Alfama, 4 nights'), 360, 'stay');
+  exp(li, P('eSIM, 2 × 10 ГБ', 'eSIM, 2 × 10 GB'), 30, 'other'); exp(li, P('Жеронимуш, 2 билета', 'Jerónimos, 2 tickets'), 24, 'activities', 1);
+  exp(li, P('Поезд LIS → OPO', 'Train LIS → OPO'), 58, 'transport', 4); exp(li, P('Отель в Порту, 3 ночи', 'Porto hotel, 3 nights'), 420, 'stay', 4);
+
+  /* Eilat */
+  const ei = mk(P('Эйлат: дайвинг', 'Eilat dive weekend'), P('Эйлат, Израиль', 'Eilat, Israel'), 37, 39, 'ILS');
+  const eiT = checklist(ei, [[P('Забронировать: Дайв-центр', 'Book: Dive center'), false, 20], [P('Проверить сертификат дайвера', 'Check diving certificate'), true, 25]],
+    [[G.docs, [[P('Удостоверение личности', 'ID card'), true], [P('Сертификат дайвера', 'Diving certificate'), false]]], [G.clothes, [[P('Купальник', 'Swimwear'), false]]], [G.toil, [[P('Солнцезащитный крем', 'Sunscreen'), false]]]]);
+  link(stop(ei, 0, P('Дайв-центр', 'Dive center'), 'activity', '09:00', 180), eiT.items[0]);
+  stop(ei, 1, P('Коралловый пляж', 'Coral beach'), 'sight', '10:00', 180);
+  stop(ei, 'idea', P('Подводная обсерватория', 'Underwater observatory'), 'sight');
+  exp(ei, P('Отель, 2 ночи', 'Hotel, 2 nights'), 1250, 'stay');
+
+  /* Tbilisi */
+  const tb = mk(P('Тбилиси: гастротур', 'Tbilisi food trip'), P('Тбилиси, Грузия', 'Tbilisi, Georgia'), 64, 70, 'USD');
+  checklist(tb, [[P('Купить авиабилеты', 'Book flights'), false, 20]], [[G.docs, [[P('Паспорт', 'Passport'), false]]], [G.clothes, []]]);
+  stop(tb, 0, P('Прилёт в TBS', 'Land at TBS'), 'transport', '05:40', 30);
+  stop(tb, 1, P('Хинкали в Пасанаури', 'Khinkali at Pasanauri'), 'food', '13:00', 90);
+  stop(tb, 'idea', P('Мцхета', 'Mtskheta'), 'sight');
+
+  /* Kyoto */
+  const ky = mk(P('Киото весной', 'Kyoto in spring'), P('Киото, Япония', 'Kyoto, Japan'), 183, 196, 'JPY');
+  checklist(ky, [[P('Оформить JR Pass', 'Get a JR Pass'), false, 150]], [[G.docs, [[P('Паспорт', 'Passport'), true]]], [G.clothes, []], [G.tech, []]]);
+  stop(ky, 'idea', P('Фусими Инари', 'Fushimi Inari'), 'sight');
+  stop(ky, 'idea', P('Бамбуковая роща Арасияма', 'Arashiyama bamboo grove'), 'sight');
+  exp(ky, P('Авиабилеты', 'Flights'), 142000, 'transport');
+
+  return { version: 2, settings: { theme: 'system', language: lang }, trips };
+}
+
+function load() { try { const s = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (s && s.version === 2) return s; } catch (e) { /* ignore */ } return null; }
+function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
+
+const initialLang = (navigator.language || 'ru').toLowerCase().startsWith('ru') ? 'ru' : 'en';
+let state = load() || seed(initialLang);
+
+/* View state (in React: URL params / component state) */
+const ui = { q: '', status: 'all', sort: 'dates', dir: 'asc', cat: 'all', expCat: 'all', expSort: 'dateDesc', ckFilter: 'all', mDay: {}, adding: null, themeMenu: false };
+
+/* =====================================================================
+   Selectors
+   ===================================================================== */
+const getTrip = (id) => state.trips.find((x) => x.id === id);
+const tripStatus = (tr) => (TODAY < tr.startDate ? 'upcoming' : TODAY > tr.endDate ? 'past' : 'ongoing');
+const spentOf = (tr) => tr.expenses.reduce((s, e) => s + e.amount, 0);
+const tasksGroup = (tr) => tr.groups.find((g) => g.kind === 'tasks');
+const packGroups = (tr) => tr.groups.filter((g) => g.kind === 'packing');
+function ckStats(tr) {
+  const packs = packGroups(tr).flatMap((g) => g.items);
+  const tasks = tasksGroup(tr).items;
+  return { packed: packs.filter((i) => i.done).length, packTotal: packs.length, tasksDone: tasks.filter((i) => i.done).length, tasksTotal: tasks.length };
+}
+/** Readiness = (packed + tasks done) / (all items). null → empty checklist */
+function readiness(tr) {
+  const s = ckStats(tr);
+  const total = s.packTotal + s.tasksTotal;
+  return total ? Math.round(((s.packed + s.tasksDone) / total) * 100) : null;
+}
+function nearestUpcoming() {
+  return state.trips.filter((x) => tripStatus(x) === 'upcoming').sort((a, b) => a.startDate.localeCompare(b.startDate))[0];
+}
+function statusBadge(tr, long = false) {
+  const st = tripStatus(tr);
+  if (st === 'ongoing') return `<span class="badge b-ongoing">${t('st_ongoing')}</span>`;
+  if (st === 'past') return `<span class="badge b-past">${t('badge_past')}</span>`;
+  const n = diffDays(TODAY, tr.startDate);
+  if (long) return `<span class="badge b-upcoming">${n === 1 ? t('soonTomorrow') : t('soonIn', { n })}</span>`;
+  const near = nearestUpcoming();
+  const label = near && near.id === tr.id ? (n === 1 ? t('tomorrow') : t('inDays', { n })) : t('st_upcoming');
+  return `<span class="badge b-upcoming">${label}</span>`;
+}
+const avClass = (tr) => 'av-' + ([...tr.id].reduce((s, c) => s + c.charCodeAt(0), 0) % 5);
+const avLetter = (tr) => esc((tr.title.trim()[0] || '?').toUpperCase());
+
+function filteredTrips() {
+  const q = ui.q.trim().toLowerCase();
+  const list = state.trips.filter((tr) => (!q || `${tr.title} ${tr.destination}`.toLowerCase().includes(q)) && (ui.status === 'all' || tripStatus(tr) === ui.status));
+  const by = {
+    title: (a, b) => a.title.localeCompare(b.title, L()),
+    dates: (a, b) => a.startDate.localeCompare(b.startDate),
+    ready: (a, b) => (readiness(a) ?? -1) - (readiness(b) ?? -1),
+    spent: (a, b) => spentOf(a) - spentOf(b),
+  }[ui.sort];
+  return list.sort((a, b) => by(a, b) * (ui.dir === 'asc' ? 1 : -1));
+}
+function findCk(tr, id) { for (const g of tr.groups) { const i = g.items.find((x) => x.id === id); if (i) return { group: g, item: i }; } return null; }
+function dayOfDate(tr, iso) { return tr.days.find((d) => d.date === iso); }
+
+/* =====================================================================
+   Theme
+   ===================================================================== */
+const mql = matchMedia('(prefers-color-scheme: dark)');
+const resolvedTheme = () => (state.settings.theme === 'system' ? (mql.matches ? 'dark' : 'light') : state.settings.theme);
+mql.addEventListener('change', () => { if (state.settings.theme === 'system') { applyTheme(); renderHeader(); } });
+const applyTheme = () => { document.documentElement.dataset.theme = resolvedTheme(); };
+const THEME_ICON = { system: '◐', light: '☀', dark: '☾' };
+
+/* =====================================================================
+   Router
+   ===================================================================== */
+function route() {
+  const p = (location.hash.slice(1) || '/').split('/').filter(Boolean);
+  if (!p.length) return { name: 'trips' };
+  if (p[0] === 'today') return { name: 'today' };
+  if (p[0] === 'trips' && p[1]) return { name: 'trip', id: p[1], tab: ['plan', 'expenses', 'checklist'].includes(p[2]) ? p[2] : 'plan' };
+  return { name: 'notfound' };
+}
+
+/* =====================================================================
+   Render: shell
+   ===================================================================== */
+const app = document.getElementById('app');
+let lastRouteKey = '';
+let pendingFocus = null;
+
+function render() {
+  applyTheme();
+  document.documentElement.lang = L();
+  const r = route();
+  const key = r.name + (r.id || '') + (r.tab || '');
+  const sameRoute = key === lastRouteKey;
+  const boardScroll = {};
+  if (sameRoute) document.querySelectorAll('[data-board]').forEach((b) => (boardScroll[b.dataset.board] = b.scrollLeft));
+
+  renderHeader(r);
+  let html = '';
+  app.classList.remove('has-sheet');
+  if (r.name === 'trips') html = renderTrips();
+  else if (r.name === 'today') html = renderToday();
+  else if (r.name === 'trip') { const tr = getTrip(r.id); html = tr ? renderTrip(tr, r.tab) : renderNotFound(); if (tr && r.tab === 'plan') app.classList.add('has-sheet'); }
+  else html = renderNotFound();
+  app.innerHTML = html;
+  renderBottomNav(r);
+  document.getElementById('foot').innerHTML = `<span>${t('protoNote', { d: fmtLong(TODAY) })}</span><button type="button" data-action="reset-demo">${t('resetDemo')}</button>`;
+
+  if (!sameRoute) { scrollTo(0, 0); lastRouteKey = key; initBoard(r); }
+  else document.querySelectorAll('[data-board]').forEach((b) => { if (boardScroll[b.dataset.board] != null) b.scrollLeft = boardScroll[b.dataset.board]; });
+  updateDaysLabel();
+  if (pendingFocus) { const el = document.querySelector(pendingFocus); el && el.focus(); pendingFocus = null; }
+}
+const commit = () => { persist(); render(); };
+
+function renderHeader(r = route()) {
+  const th = state.settings.theme;
+  const cur = r.name === 'today' ? 'today' : 'trips';
+  document.getElementById('appbar').innerHTML = `
+    <a class="logo" href="#/"><span class="logo-mark">W</span><span class="logo-name">waypoint</span></a>
+    <nav class="nav">
+      <a href="#/" ${cur === 'trips' ? 'aria-current="page"' : ''}>${t('nav_trips')}</a>
+      <a href="#/today" ${cur === 'today' ? 'aria-current="page"' : ''}>${t('nav_today')}</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="pillseg sm" role="group" aria-label="Language">
+      ${['en', 'ru'].map((v) => `<button type="button" data-action="lang" data-v="${v}" aria-pressed="${L() === v}">${v.toUpperCase()}</button>`).join('')}
+    </div>
+    <div class="theme-wrap">
+      <button type="button" class="circle-btn" data-action="theme-menu" aria-haspopup="menu" aria-expanded="${ui.themeMenu}" title="${t('theme')}: ${t('th_' + th)}">${THEME_ICON[th]}</button>
+      ${ui.themeMenu ? `<div class="menu" role="menu">
+        ${['system', 'light', 'dark'].map((v) => `<button type="button" role="menuitemradio" aria-checked="${th === v}" data-action="theme" data-v="${v}"><span class="ico">${THEME_ICON[v]}</span>${t('th_' + v)}<span class="chk">✓</span></button>`).join('')}
+      </div>` : ''}
+    </div>
+    <span class="me" aria-hidden="true">A</span>`;
+}
+
+function renderBottomNav(r) {
+  const items = r.name === 'trip' && getTrip(r.id)
+    ? [['#/today', '◉', t('nav_today'), false], ...['plan', 'expenses', 'checklist'].map((k, i) => [`#/trips/${r.id}/${k}`, ['▦', '€', '✓'][i], t('tab_' + k), r.tab === k])]
+    : [['#/', '✈', t('nav_trips'), r.name === 'trips'], ['#/today', '◉', t('nav_today'), r.name === 'today']];
+  document.getElementById('bnav').innerHTML = items.map(([h, ic, lbl, on]) => `<a href="${h}" ${on ? 'aria-current="page"' : ''}><span class="ic">${ic}</span>${lbl}</a>`).join('');
+}
+
+/* =====================================================================
+   Trips page
+   ===================================================================== */
+function renderTrips() {
+  const cnt = (s) => state.trips.filter((x) => tripStatus(x) === s).length;
+  const head = `
+    <div class="page-head">
+      <div><h1>${t('nav_trips')}</h1><div class="meta">${tp('tripsCount', state.trips.length)} · ${t('nowCount', { n: cnt('ongoing') })} · ${t('soonCount', { n: cnt('upcoming') })}</div></div>
+      <button class="btn btn-primary btn-new" data-action="new-trip">+ ${t('newTrip')}</button>
+    </div>
+    <button class="fab" data-action="new-trip">+ ${t('newTrip')}</button>`;
+  if (!state.trips.length) return head + `
+    <div class="card empty"><div class="e-ic">✈</div><h2>${t('noTrips')}</h2><p>${t('noTripsHint')}</p><button class="btn btn-primary" data-action="new-trip">+ ${t('newTrip')}</button></div>`;
+  return head + `
+    <div class="card toolbar">
+      <input class="input search" id="search" type="search" placeholder="${t('search')}" value="${esc(ui.q)}" aria-label="${t('search')}">
+      <div class="pillseg" role="group">
+        ${['all', 'upcoming', 'ongoing', 'past'].map((s) => `<button type="button" data-action="status" data-v="${s}" aria-pressed="${ui.status === s}">${t('st_' + s)}</button>`).join('')}
+      </div>
+      <select class="select pill sort-m" data-ui="sortCombo" aria-label="Sort">
+        ${['dates_asc', 'dates_desc', 'title_asc', 'ready_desc', 'spent_desc'].map((v) => `<option value="${v}" ${`${ui.sort}_${ui.dir}` === v ? 'selected' : ''}>${t('sort_' + v)}</option>`).join('')}
+      </select>
+    </div>
+    <div id="results">${renderResults()}</div>`;
+}
+
+function renderResults() {
+  const list = filteredTrips();
+  if (!list.length) {
+    const s = t('st_' + ui.status);
+    return `<div class="card empty"><div class="e-ic">?</div><h2>${t('noResults')}</h2>
+      <p>${ui.q.trim() ? t('noResultsQ', { q: esc(ui.q.trim()), s }) : t('noResultsS', { s })}</p>
+      <button class="btn" data-action="reset-filters">${t('resetFilters')}</button></div>`;
+  }
+  const th = (key, label) => {
+    const on = ui.sort === key;
+    return `<button type="button" class="th ${on ? 'on' : ''}" data-action="sort" data-v="${key}" aria-sort="${on ? (ui.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">${label} <span class="arr">${on ? (ui.dir === 'asc' ? '↑' : '↓') : '↑↓'}</span></button>`;
+  };
+  const rows = list.map((tr) => {
+    const r = readiness(tr);
+    const sp = spentOf(tr);
+    return `
+      <div class="trow" data-href="#/trips/${tr.id}" tabindex="0" role="link" aria-label="${esc(tr.title)}">
+        <div class="t-trip"><div class="av ${avClass(tr)}">${avLetter(tr)}</div><div style="min-width:0"><div class="t-title">${esc(tr.title)}</div><div class="t-sub">${esc(tr.destination)}</div></div></div>
+        <div class="num">${fmtRange(tr.startDate, tr.endDate)}</div>
+        <div class="num">${tr.days.length}</div>
+        <div class="t-bar"><div class="bar"><i style="width:${r ?? 0}%"></i></div><div class="meta">${r == null ? t('readyNone') : t('readyPct', { p: r })}</div></div>
+        <div><b class="num">${money(sp, tr.currency)}</b><div class="meta">${tp('expensesCount', tr.expenses.length)}</div></div>
+        <div>${statusBadge(tr)}</div>
+        <div class="t-actions">
+          <button class="sq-btn" data-action="edit-trip" data-id="${tr.id}" title="${t('edit')}" aria-label="${t('edit')}">✎</button>
+          <button class="sq-btn danger" data-action="delete-trip" data-id="${tr.id}" title="${t('delete')}" aria-label="${t('delete')}">×</button>
+        </div>
+      </div>`;
+  }).join('');
+  const cards = list.map((tr) => {
+    const r = readiness(tr);
+    return `
+      <article class="card tcard" data-href="#/trips/${tr.id}" tabindex="0" role="link" aria-label="${esc(tr.title)}">
+        <div class="av ${avClass(tr)}">${avLetter(tr)}</div>
+        <div style="min-width:0">
+          <div class="t-title">${esc(tr.title)}</div>
+          <div class="row"><span class="num">${fmtRange(tr.startDate, tr.endDate)}</span>${statusBadge(tr)}</div>
+          <div class="bar"><i style="width:${r ?? 0}%"></i></div>
+          <div class="meta" style="margin-top:4px">${r == null ? t('readyNone') : t('readyPct', { p: r })} · ${money(spentOf(tr), tr.currency)}</div>
+        </div>
+      </article>`;
+  }).join('');
+  return `
+    <div class="card table" role="table">
+      <div class="trow head" role="row">
+        ${th('title', t('col_trip'))}${th('dates', t('col_dates'))}<span class="th static">${t('col_days')}</span>${th('ready', t('col_ready'))}${th('spent', t('col_spent'))}<span class="th static">${t('col_status')}</span><span></span>
+      </div>
+      ${rows}
+    </div>
+    <div class="cards">${cards}</div>`;
+}
+
+/* =====================================================================
+   Trip page
+   ===================================================================== */
+function renderTrip(tr, tab) {
+  const r = readiness(tr);
+  const body = { plan: renderPlan, expenses: renderExpenses, checklist: renderChecklist }[tab](tr);
+  return `
+    <section class="card trip-head">
+      <div class="th-row">
+        <a class="circle-btn" href="#/" aria-label="${t('back')}">←</a>
+        <div class="av lg ${avClass(tr)}">${avLetter(tr)}</div>
+        <div class="th-main">
+          <div class="th-title"><h1>${esc(tr.title)}</h1>${statusBadge(tr, true)}</div>
+          <div class="meta">${fmtRange(tr.startDate, tr.endDate, true)} · ${tp('days', tr.days.length)} · ${esc(tr.destination)}</div>
+        </div>
+        <div class="th-ready">
+          <div class="top"><span class="label">${t('ready')}</span><b class="num">${r == null ? '—' : r + '%'}</b></div>
+          <div class="bar"><i style="width:${r ?? 0}%"></i></div>
+        </div>
+        <div class="th-actions">
+          <button class="btn" data-action="edit-trip" data-id="${tr.id}" aria-label="${t('edit')}"><span class="lbl">${t('edit')}</span><span class="ico">✎</span></button>
+          <button class="btn btn-danger-outline" data-action="delete-trip" data-id="${tr.id}" aria-label="${t('delete')}"><span class="lbl">${t('delete')}</span><span class="ico">×</span></button>
+        </div>
+      </div>
+      ${tr.notes ? `<div class="th-notes">${esc(tr.notes)}</div>` : ''}
+      <div class="tabs-row"><nav class="pillseg" aria-label="Sections">
+        ${['plan', 'expenses', 'checklist'].map((k) => `<a href="#/trips/${tr.id}/${k}" ${tab === k ? 'aria-current="page"' : ''}>${t('tab_' + k)}</a>`).join('')}
+      </nav></div>
+    </section>
+    ${body}`;
+}
+
+/* ---------- shared bits ---------- */
+function itemCard(tr, it) {
+  const dim = ui.cat !== 'all' && it.category !== ui.cat;
+  const sub = [it.location, it.note, it.durationMin ? fmtDur(+it.durationMin) : ''].filter(Boolean).map(esc).join(' · ');
+  let bk = '';
+  if (it.needsBooking) {
+    const task = it.bookingTaskId && findCk(tr, it.bookingTaskId);
+    if (task && task.item.done) bk = `<div class="bk ok">${t('booked')}</div>`;
+    else bk = `<div class="bk">${task && task.item.dueDate ? t('needsBookingBy', { d: fmtShort(task.item.dueDate) }) : t('needsBooking')}</div>`;
+  }
+  return `
+    <div class="icard ${dim ? 'dim' : ''} ${it.done ? 'done' : ''}" data-drag="${it.id}" data-action="edit-stop" data-id="${it.id}" tabindex="0" role="button" aria-label="${esc(it.title)}">
+      <div class="top"><span class="ttl">${it.done ? '✓ ' : ''}${esc(it.title)}</span>${it.time ? `<span class="num">${it.time}</span>` : ''}</div>
+      ${sub ? `<div class="sub">${sub}</div>` : ''}
+      ${bk}
+      <div class="bottom"><span class="cat" style="--c:var(--c-${it.category})"><span class="dot"></span>${t('ic_' + it.category)}</span><span class="grip" aria-hidden="true">⠿</span></div>
+    </div>`;
+}
+
+function ckRow(tr, g, it) {
+  const overdue = it.dueDate && !it.done && it.dueDate < TODAY;
+  return `
+    <div class="crow ${it.done ? 'done' : ''}">
+      <label><input type="checkbox" class="ck" data-ck="${it.id}" ${it.done ? 'checked' : ''}><span class="body"><span class="txt">${esc(it.text)}</span>${it.dueDate ? `<span class="due ${overdue ? 'overdue' : ''}">${fmtShort(it.dueDate)}</span>` : ''}</span></label>
+      <button class="mini-btn danger" data-action="delete-ck" data-id="${it.id}" aria-label="${t('delete')}" title="${t('delete')}">×</button>
+    </div>`;
+}
+
+function inlineAdd(g) {
+  const isTask = g.kind === 'tasks';
+  return `
+    <form class="inline-add" data-form="ck-add" data-group="${g.id}" novalidate>
+      <input class="input input-sm" name="text" placeholder="${t(isTask ? 'ph_task' : 'ph_packing')}" maxlength="120" autocomplete="off">
+      ${isTask ? `<input class="input input-sm" type="date" name="dueDate" aria-label="${t('f_date')}">` : ''}
+      <div class="err"></div>
+      <div class="row"><button class="btn btn-primary btn-sm" type="submit">${t('add')}</button><button class="btn btn-sm" type="button" data-action="cancel-add">${t('cancel')}</button></div>
+    </form>`;
+}
+
+function sortTasks(items) {
+  return [...items].sort((a, b) => (a.done - b.done) || (a.dueDate || '9999').localeCompare(b.dueDate || '9999'));
+}
+
+/* ---------- Plan ---------- */
+function renderPlan(tr) {
+  const tg = tasksGroup(tr);
+  const left = tg.items.filter((i) => !i.done).length;
+  const todayIdx = tr.days.findIndex((d) => d.date === TODAY);
+
+  const beforeCol = `
+    <section class="col" id="col-before">
+      <div class="col-head"><span>${t('beforeTrip')}</span><span class="pill-count ${left ? '' : 'ok'}">${left ? t('left', { n: left }) : t('allDone')}</span></div>
+      <div class="list">${sortTasks(tg.items).map((it) => ckRow(tr, tg, it)).join('')}</div>
+      ${ui.adding === tg.id ? inlineAdd(tg) : `<button class="add-dashed" data-action="start-add" data-group="${tg.id}">${t('addTask')}</button>`}
+    </section>`;
+
+  const dayCols = tr.days.map((d, i) => `
+    <section class="col ${i === todayIdx ? 'today' : ''}" data-dayidx="${i}" id="col-${d.id}">
+      <div class="col-head"><span class="left">${t('day', { n: i + 1 })} · ${wd(d.date)} ${parseISO(d.date).getDate()}${i === todayIdx ? ` <span class="today-tag">${t('today')}</span>` : ''}</span><span class="cnt">${d.itemIds.length}</span></div>
+      <div class="list" data-drop="day:${d.id}">
+        ${d.itemIds.map((id) => itemCard(tr, tr.items[id])).join('') || `<div class="empty-drop">${t('emptyDay')}</div>`}
+      </div>
+      <button class="add-dashed" data-action="add-stop" data-day="${d.id}">${t('addStop')}</button>
+    </section>`).join('');
+
+  const ideasCol = `
+    <section class="col ideas" id="col-ideas">
+      <div class="col-head"><span>${t('ideas')}</span><span class="label">${t('notScheduled')}</span></div>
+      <div class="col-hint">${t('ideasHint')}</div>
+      <div class="list" data-drop="ideas">
+        ${tr.ideaIds.map((id) => itemCard(tr, tr.items[id])).join('') || `<div class="empty-drop">${t('emptyDay')}</div>`}
+      </div>
+      <button class="add-dashed" data-action="add-stop" data-day="">${t('addIdea')}</button>
+    </section>`;
+
+  /* mobile: chips + single column + ideas sheet */
+  const sel = ui.mDay[tr.id] || (todayIdx > -1 ? tr.days[todayIdx].id : tr.days[0].id);
+  const selDay = tr.days.find((d) => d.id === sel);
+  const selIdx = tr.days.indexOf(selDay);
+  const mchips = `
+    <div class="mchips">
+      <button class="before" data-action="mday" data-v="before" aria-pressed="${sel === 'before'}">${t('beforeShort')} · ${left}</button>
+      ${tr.days.map((d) => `<button data-action="mday" data-v="${d.id}" aria-pressed="${sel === d.id}">${wd(d.date)} ${parseISO(d.date).getDate()}</button>`).join('')}
+    </div>`;
+  const mbody = sel === 'before' || !selDay
+    ? `<div class="mday-head"><div><h2>${t('beforeTrip')}</h2><div class="meta">${t('mBeforeHint')}</div></div></div>
+       <div class="list" style="gap:10px">${sortTasks(tg.items).map((it) => ckRow(tr, tg, it)).join('')}</div>
+       <div style="margin-top:10px">${ui.adding === tg.id ? inlineAdd(tg) : `<button class="add-dashed" style="width:100%" data-action="start-add" data-group="${tg.id}">${t('addTask')}</button>`}</div>`
+    : `<div class="mday-head"><div><h2>${t('day', { n: selIdx + 1 })} · ${fmtLong(selDay.date)}</h2><div class="meta">${t('mDayHint', { s: tp('stops', selDay.itemIds.length) })}</div></div>
+         <button class="fab-round" data-action="add-stop" data-day="${selDay.id}" aria-label="${t('addStop')}">+</button></div>
+       <div class="list" data-drop="day:${selDay.id}">${selDay.itemIds.map((id) => itemCard(tr, tr.items[id])).join('') || `<div class="empty-drop">${t('emptyDay')}</div>`}</div>`;
+
+  return `
+    <div class="subbar plan-subbar">
+      <div class="left">
+        <span class="label" id="days-label">${t('daysRange', { a: 1, b: Math.min(3, tr.days.length), n: tr.days.length })}</span>
+        <button class="circle-btn sm" data-action="board-scroll" data-dir="-1" aria-label="‹">‹</button>
+        <button class="circle-btn sm" data-action="board-scroll" data-dir="1" aria-label="›">›</button>
+      </div>
+      <select class="select pill" data-ui="cat" aria-label="${t('f_category')}">
+        <option value="all">${t('catAll')}</option>
+        ${ITEM_CATS.map((c) => `<option value="${c}" ${ui.cat === c ? 'selected' : ''}>${t('ic_' + c)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="board plan" data-board="plan">${beforeCol}${dayCols}${ideasCol}</div>
+    <div class="mplan">${mchips}${mbody}</div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div class="head"><h2>${t('ideas')} · ${tr.ideaIds.length}</h2><span class="meta">${t('ideasSheetHint')}</span></div>
+      <div class="list chipsx" data-drop="ideas" data-axis="x">
+        ${tr.ideaIds.map((id) => `<span class="ichip" data-drag="${id}" data-action="edit-stop" data-id="${id}" style="--c:var(--c-${tr.items[id].category})"><span class="dot"></span>${esc(tr.items[id].title)}</span>`).join('')}
+        <button class="ichip add" data-action="add-stop" data-day="">+</button>
+      </div>
+    </div>`;
+}
+
+function initBoard(r) {
+  if (r.name !== 'trip' || r.tab !== 'plan') return;
+  const tr = getTrip(r.id); const b = document.querySelector('[data-board="plan"]');
+  if (!tr || !b) return;
+  const d = dayOfDate(tr, TODAY);
+  if (d) { const col = document.getElementById('col-' + d.id); if (col) b.scrollLeft = col.offsetLeft - 16 - (col.offsetWidth + 14); }
+}
+function updateDaysLabel() {
+  const b = document.querySelector('[data-board="plan"]'); const lbl = document.getElementById('days-label');
+  if (!b || !lbl) return;
+  const cols = [...b.querySelectorAll('[data-dayidx]')];
+  const L0 = b.scrollLeft, R0 = L0 + b.clientWidth;
+  const vis = cols.filter((c) => c.offsetLeft + c.offsetWidth / 2 >= L0 && c.offsetLeft + c.offsetWidth / 2 <= R0).map((c) => +c.dataset.dayidx);
+  if (vis.length) lbl.textContent = t('daysRange', { a: Math.min(...vis) + 1, b: Math.max(...vis) + 1, n: cols.length });
+}
+document.addEventListener('scroll', (e) => { if (e.target.matches && e.target.matches('[data-board="plan"]')) updateDaysLabel(); }, true);
+
+/* ---------- Expenses ---------- */
+function renderExpenses(tr) {
+  const total = spentOf(tr);
+  const st = tripStatus(tr);
+  const elapsed = st === 'past' ? tr.days.length : st === 'ongoing' ? diffDays(tr.startDate, TODAY) + 1 : 0;
+  const cats = EXP_CATS.map((c) => ({ c, sum: tr.expenses.filter((e) => e.category === c).reduce((s, e) => s + e.amount, 0) })).filter((x) => x.sum > 0).sort((a, b) => b.sum - a.sum);
+  const max = cats.length ? cats[0].sum : 0;
+
+  if (!tr.expenses.length) return `
+    <div class="card empty"><div class="e-ic">€</div><h2>${t('noExpenses')}</h2><p>${t('noExpensesHint')}</p><button class="btn btn-primary" data-action="add-expense">${t('expAdd')}</button></div>`;
+
+  let list = tr.expenses.filter((e) => ui.expCat === 'all' || e.category === ui.expCat);
+  const cmp = {
+    dateDesc: (a, b) => (b.date || '').localeCompare(a.date || ''),
+    dateAsc: (a, b) => (a.date || '9999').localeCompare(b.date || '9999'),
+    amountDesc: (a, b) => b.amount - a.amount,
+    amountAsc: (a, b) => a.amount - b.amount,
+  }[ui.expSort];
+  list = [...list].sort(cmp);
+  const listTotal = list.reduce((s, e) => s + e.amount, 0);
+
+  return `
+    <div class="exp-layout">
+      <div class="exp-side">
+        <div class="spent-card">
+          <div class="label">${t('spent')}</div>
+          <div class="big num">${money(total, tr.currency)}</div>
+          <div class="meta">${tp('expensesCount', tr.expenses.length)}${elapsed ? ' · ' + t('perDay', { a: money(Math.round(total / elapsed), tr.currency) }) : ''}</div>
+        </div>
+        <div class="card cats">
+          <div class="label">${t('byCategory')}</div>
+          ${cats.map(({ c, sum }) => `
+            <div class="cat-row" style="--c:var(--c-${EXP_COLOR[c]})">
+              <div class="top"><span class="cat"><span class="dot"></span>${t('cat_' + c)}</span><b>${money(sum, tr.currency)} <span class="meta" style="font-weight:400">· ${Math.round((sum / total) * 100)}%</span></b></div>
+              <div class="bar"><i style="width:${(sum / max) * 100}%"></i></div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="card exp-table">
+        <div class="exp-tools">
+          <select class="select pill" data-ui="expCat" aria-label="${t('f_category')}">
+            ${['all', ...EXP_CATS].map((c) => `<option value="${c}" ${ui.expCat === c ? 'selected' : ''}>${t('cat_' + c)}</option>`).join('')}
+          </select>
+          <select class="select pill" data-ui="expSort" aria-label="Sort">
+            ${['dateDesc', 'dateAsc', 'amountDesc', 'amountAsc'].map((s) => `<option value="${s}" ${ui.expSort === s ? 'selected' : ''}>${t('es_' + s)}</option>`).join('')}
+          </select>
+          <span class="spacer"></span>
+          <button class="btn btn-primary" data-action="add-expense">${t('expAdd')}</button>
+        </div>
+        <div class="erow head"><span class="label">${t('col_date')}</span><span class="label">${t('col_what')}</span><span class="label">${t('col_category')}</span><span class="label" style="text-align:right">${t('col_amount')}</span><span></span></div>
+        ${list.length ? list.map((e) => `
+          <div class="erow">
+            <span class="d-date num">${e.date ? fmtShort(e.date) : '—'}</span>
+            <div><div class="what">${esc(e.title)}</div><div class="m-sub">${e.date ? fmtShort(e.date) + ' · ' : ''}${t('cat_' + e.category)}</div></div>
+            <span class="d-cat cat" style="--c:var(--c-${EXP_COLOR[e.category]})"><span class="dot"></span>${t('cat_' + e.category)}</span>
+            <span class="amt">${money(e.amount, tr.currency)}</span>
+            <div class="acts">
+              <button class="sq-btn" data-action="edit-expense" data-id="${e.id}" aria-label="${t('edit')}" title="${t('edit')}">✎</button>
+              <button class="sq-btn danger" data-action="delete-expense" data-id="${e.id}" aria-label="${t('delete')}" title="${t('delete')}">×</button>
+            </div>
+          </div>`).join('') : `<div class="empty" style="padding:28px"><p style="margin:0">${t('noMatch')}</p></div>`}
+        <div class="exp-foot"><span class="meta">${tp('expensesCount', list.length)}</span><b class="num">${t('total', { a: money(listTotal, tr.currency) })}</b></div>
+      </div>
+    </div>`;
+}
+
+/* ---------- Checklist ---------- */
+function renderChecklist(tr) {
+  const s = ckStats(tr);
+  const f = ui.ckFilter;
+  const show = (it) => f === 'all' || (f === 'done' ? it.done : !it.done);
+  const col = (g) => {
+    const isTask = g.kind === 'tasks';
+    const items = isTask ? sortTasks(g.items) : g.items;
+    const shown = items.filter(show);
+    const done = g.items.filter((i) => i.done).length;
+    return `
+      <section class="col">
+        <div class="col-head">
+          <span class="left"><span class="gtitle">${isTask ? t('tasks') : esc(g.title)}</span></span>
+          <span class="left"><span class="cnt num">${done}/${g.items.length}</span>
+            ${isTask ? '' : `<button class="mini-btn" data-action="rename-group" data-id="${g.id}" aria-label="${t('renameGroup')}" title="${t('renameGroup')}">✎</button><button class="mini-btn danger" data-action="delete-group" data-id="${g.id}" aria-label="${t('delete')}" title="${t('delete')}">×</button>`}
+          </span>
+        </div>
+        <div class="list">${shown.map((it) => ckRow(tr, g, it)).join('') || (g.items.length ? '' : `<div class="empty-drop">${t('emptyGroup')}</div>`)}</div>
+        ${ui.adding === g.id ? inlineAdd(g) : `<button class="add-dashed" data-action="start-add" data-group="${g.id}">${isTask ? t('addTaskDated') : t('addItem')}</button>`}
+      </section>`;
+  };
+  return `
+    <div class="ck-bar">
+      <div class="pillseg sm" role="group">${['all', 'todo', 'done'].map((v) => `<button type="button" data-action="ck-filter" data-v="${v}" aria-pressed="${f === v}">${t('ck_' + v)}</button>`).join('')}</div>
+      <span class="meta">${t('ckSummary', { a: s.packed, b: s.packTotal, c: s.tasksDone, d: s.tasksTotal })}</span>
+      <span class="spacer"></span>
+      <button class="btn btn-sm" data-action="add-group">${t('addGroup')}</button>
+    </div>
+    <div class="board ck" data-board="ck">${tr.groups.map(col).join('')}</div>`;
+}
+
+/* ---------- Today ---------- */
+function renderToday() {
+  const ongoing = state.trips.filter((x) => tripStatus(x) === 'ongoing').sort((a, b) => a.startDate.localeCompare(b.startDate))[0];
+  if (ongoing) {
+    const tr = ongoing;
+    const day = dayOfDate(tr, TODAY);
+    const idx = tr.days.indexOf(day);
+    const items = day.itemIds.map((id) => tr.items[id]);
+    const nm = nowMinutes();
+    const end = (i) => toMin(i.time) + (+i.durationMin || 60);
+    const current = items.find((i) => !i.done && i.time && toMin(i.time) <= nm && nm < end(i));
+    const upcoming = items.filter((i) => !i.done && i !== current && (!i.time || toMin(i.time) >= nm));
+    const hero = current || upcoming[0];
+    const rest = upcoming.filter((i) => i !== hero);
+    const range = (i) => (i.time ? (i.durationMin ? `${i.time}–${fromMin(toMin(i.time) + +i.durationMin)}` : i.time) : '');
+    const tg = tasksGroup(tr);
+    const todayTasks = sortTasks(tg.items.filter((i) => i.dueDate === TODAY || (i.dueDate && i.dueDate < TODAY && !i.done)));
+
+    let heroHtml;
+    if (hero) {
+      const lbl = current ? t('nowLbl', { r: range(hero) }) : hero.time ? t('nextLbl', { r: range(hero) }) : t('nextNoTime');
+      const sub = [hero.location, hero.note, hero.durationMin ? fmtDur(+hero.durationMin) : ''].filter(Boolean).map(esc).join(' · ');
+      heroHtml = `
+        <section class="now-card">
+          <div class="label">${lbl}</div>
+          <h2>${esc(hero.title)}</h2>
+          <div class="meta">${sub || t('ic_' + hero.category)}</div>
+          <div class="acts">
+            <button class="btn" data-action="edit-stop" data-id="${hero.id}" data-trip="${tr.id}">${t('notes')}</button>
+            <button class="btn fill" data-action="mark-done" data-id="${hero.id}" data-trip="${tr.id}">${t('doneBtn')}</button>
+          </div>
+        </section>`;
+    } else {
+      heroHtml = `<section class="card empty" style="padding:36px 20px;margin-bottom:22px"><div class="e-ic" style="width:80px;height:80px;font-size:30px">✓</div>
+        <h2>${items.length ? t('dayDone') : t('noStopsToday')}</h2><p>${items.length ? t('dayDoneHint') : ''}</p>
+        <a class="btn" href="#/trips/${tr.id}/plan">${t('openPlan')}</a></section>`;
+    }
+    return `
+      <div class="today">
+        <div class="today-head">
+          <div><h1>${t('todayTitle', { a: idx + 1, b: tr.days.length })}</h1><div class="meta">${fmtLong(TODAY)} · ${esc(tr.destination)}</div></div>
+          <a class="btn btn-sm" href="#/trips/${tr.id}/plan">${t('openPlan')} →</a>
+        </div>
+        ${heroHtml}
+        ${rest.length ? `<div class="label sec-label">${t('next')}</div>
+          <div class="stack">${rest.map((i) => `
+            <div class="nrow" data-action="edit-stop" data-id="${i.id}" data-trip="${tr.id}" role="button" tabindex="0">
+              <div><b>${esc(i.title)}</b><span class="meta">${i.time ? i.time + ' · ' : ''}${t('ic_' + i.category)}</span></div>
+              <span class="dot" style="--c:var(--c-${i.category})"></span>
+            </div>`).join('')}</div>` : ''}
+        <div class="label sec-label">${t('dontForget')}</div>
+        <div class="stack">${todayTasks.length ? todayTasks.map((it) => ckRow(tr, tg, it)).join('') : `<div class="meta">${t('nothingToday')}</div>`}</div>
+        <button class="btn btn-primary" style="width:100%" data-action="add-expense" data-trip="${tr.id}">${t('expAdd')}</button>
+      </div>`;
+  }
+  const nx = nearestUpcoming();
+  if (nx) {
+    const r = readiness(nx);
+    const tg = tasksGroup(nx);
+    const open = sortTasks(tg.items.filter((i) => !i.done));
+    return `
+      <div class="today">
+        <div class="today-head"><div><h1>${t('todayPlain')}</h1><div class="meta">${fmtLong(TODAY)}</div></div></div>
+        <section class="card next-trip">
+          <div class="label" style="margin-bottom:12px">${t('nextTrip')}</div>
+          <div class="row"><div class="av lg ${avClass(nx)}">${avLetter(nx)}</div>
+            <div style="flex:1;min-width:0"><h2>${esc(nx.title)}</h2><div class="meta">${fmtRange(nx.startDate, nx.endDate, true)} · ${esc(nx.destination)}</div></div>
+            ${statusBadge(nx)}</div>
+          <div class="meta" style="display:flex;justify-content:space-between;margin-bottom:6px"><span>${t('ready')}</span><b>${r == null ? '—' : r + '%'}</b></div>
+          <div class="bar"><i style="width:${r ?? 0}%"></i></div>
+          <a class="btn btn-primary" style="width:100%;margin-top:16px" href="#/trips/${nx.id}/plan">${t('open')}</a>
+        </section>
+        ${open.length ? `<div class="label sec-label">${t('beforeTrip')}</div><div class="stack">${open.map((it) => ckRow(nx, tg, it)).join('')}</div>` : ''}
+      </div>`;
+  }
+  return `<div class="today"><div class="card empty"><div class="e-ic">◉</div><h2>${t('noTripsNow')}</h2><p>${t('noTripsNowHint')}</p><button class="btn btn-primary" data-action="new-trip">+ ${t('newTrip')}</button></div></div>`;
+}
+
+function renderNotFound() {
+  return `<div class="card empty"><div class="e-ic">?</div><h2>${t('notFound')}</h2><p>${t('notFoundHint')}</p><a class="btn" href="#/">← ${t('nav_trips')}</a></div>`;
+}
+
+/* =====================================================================
+   Modal & forms
+   ===================================================================== */
+const modalRoot = document.getElementById('modal-root');
+let modal = null;
+
+function openModal({ title, body, submitLabel, danger = false, validate, onSubmit }) {
+  modal = { validate, onSubmit, submitted: false, touched: new Set(), returnFocus: document.activeElement };
+  modalRoot.innerHTML = `
+    <div class="overlay" data-overlay>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
+        <form id="modal-form" novalidate>
+          <header><h2 id="m-title">${title}</h2><button type="button" class="circle-btn sm" data-action="close-modal" aria-label="${t('close')}">×</button></header>
+          <div class="form-summary" id="form-summary" hidden></div>
+          ${body}
+          <footer>
+            <button type="button" class="btn" data-action="close-modal">${t('cancel')}</button>
+            <button type="submit" class="btn ${danger ? 'btn-danger' : 'btn-primary'}">${submitLabel || t('save')}</button>
+          </footer>
+        </form>
+      </div>
+    </div>`;
+  const first = modalRoot.querySelector('.input, .select, .textarea') || modalRoot.querySelector('[type=submit]');
+  first && first.focus();
+}
+function closeModal() {
+  if (!modal) return;
+  const rf = modal.returnFocus; modal = null; modalRoot.innerHTML = '';
+  rf && document.contains(rf) && rf.focus();
+}
+const formData = (form) => Object.fromEntries(new FormData(form).entries());
+function showErrors(form) {
+  const errs = modal.validate ? modal.validate(formData(form)) : {};
+  form.querySelectorAll('.field[data-name]').forEach((f) => {
+    const n = f.dataset.name;
+    const msg = (modal.submitted || modal.touched.has(n)) ? errs[n] : '';
+    f.classList.toggle('invalid', !!msg);
+    const e = f.querySelector('.err'); if (e) e.textContent = msg || '';
+    const c = f.querySelector('.input, .select, .textarea'); c && c.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  });
+  const n = Object.keys(errs).length;
+  const sum = form.querySelector('#form-summary');
+  sum.hidden = !(modal.submitted && n);
+  sum.textContent = n ? tp('fixN', n) : '';
+  return errs;
+}
+const field = (name, label, control, { required = false, optional = false, hidden = false } = {}) => `
+  <div class="field" data-name="${name}" ${hidden ? 'hidden' : ''}>
+    <label for="f-${name}">${label}${required ? ' *' : ''}${optional ? ` <span class="opt">· ${t('optional')}</span>` : ''}</label>
+    ${control}
+    <div class="err" id="e-${name}"></div>
+  </div>`;
+const input = (name, value = '', attrs = '') => `<input class="input" id="f-${name}" name="${name}" value="${esc(value)}" aria-describedby="e-${name}" ${attrs}>`;
+const select = (name, opts, value) => `<select class="select" id="f-${name}" name="${name}">${opts.map(([v, l]) => `<option value="${v}" ${String(v) === String(value) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+
+/* ---------- Trip form ---------- */
+function validateTrip(d) {
+  const e = {};
+  const title = (d.title || '').trim();
+  if (title.length < 2 || title.length > 80) e.title = t('errTitle');
+  if (!(d.destination || '').trim()) e.destination = t('errDest');
+  if (!d.startDate) e.startDate = t('errDate');
+  if (!d.endDate) e.endDate = t('errDate');
+  if (d.startDate && d.endDate) {
+    if (d.endDate < d.startDate) e.endDate = t('errEndBefore');
+    else if (diffDays(d.startDate, d.endDate) + 1 > 60) e.endDate = t('errTooLong');
+  }
+  if ((d.notes || '').length > 1000) e.notes = t('errNotes');
+  return e;
+}
+function openTripForm(tr) {
+  const v = tr || { title: '', destination: '', startDate: '', endDate: '', currency: 'ILS', notes: '' };
+  openModal({
+    title: tr ? t('editTrip') : t('newTrip'), submitLabel: tr ? t('save') : t('createTrip'),
+    body: `
+      ${field('title', t('f_title'), input('title', v.title, `placeholder="${t('ph_title')}" maxlength="90"`), { required: true })}
+      ${field('destination', t('f_destination'), input('destination', v.destination, `placeholder="${t('ph_destination')}"`), { required: true })}
+      <div class="grid2">
+        ${field('startDate', t('f_start'), input('startDate', v.startDate, 'type="date"'), { required: true })}
+        ${field('endDate', t('f_end'), input('endDate', v.endDate, 'type="date"'), { required: true })}
+      </div>
+      ${field('currency', t('f_currency'), select('currency', CURRENCIES.map((c) => [c, c]), v.currency))}
+      ${field('notes', t('f_notes'), `<textarea class="textarea" id="f-notes" name="notes" placeholder="${t('ph_notes')}">${esc(v.notes)}</textarea>`, { optional: true })}`,
+    validate: validateTrip,
+    onSubmit: (d) => {
+      const data = { title: d.title.trim(), destination: d.destination.trim(), startDate: d.startDate, endDate: d.endDate, currency: d.currency, notes: d.notes.trim() };
+      if (tr) {
+        const moved = syncDays(tr, data.startDate, data.endDate);
+        Object.assign(tr, data, { updatedAt: Date.now() });
+        toast(moved ? t('movedToIdeas', { n: moved }) : t('saved'));
+      } else {
+        const trip = { id: uid(), ...data, createdAt: Date.now(), updatedAt: Date.now(), days: rangeDates(data.startDate, data.endDate).map((date) => ({ id: uid(), date, itemIds: [] })), ideaIds: [], items: {}, expenses: [], groups: defaultGroups(L()) };
+        state.trips.push(trip);
+        location.hash = `#/trips/${trip.id}/plan`;
+        toast(t('created'));
+      }
+    },
+  });
+}
+/** Keep days that still fit, add new ones; stops of removed days go to Ideas. */
+function syncDays(tr, start, end) {
+  const byDate = Object.fromEntries(tr.days.map((d) => [d.date, d]));
+  const next = rangeDates(start, end).map((date) => byDate[date] || { id: uid(), date, itemIds: [] });
+  let moved = 0;
+  tr.days.forEach((d) => {
+    if (d.date >= start && d.date <= end) return;
+    d.itemIds.forEach((id) => { tr.items[id].dayId = null; tr.ideaIds.push(id); moved++; });
+  });
+  tr.days = next;
+  return moved;
+}
+
+/* ---------- Stop / idea form ---------- */
+function openStopForm(tr, dayId, item) {
+  const v = item || { title: '', category: 'sight', time: '', durationMin: '', location: '', note: '', needsBooking: false, done: false };
+  const where = item ? (item.dayId ? 'day' : 'ideas') : (dayId ? 'day' : 'ideas');
+  const curDay = item ? item.dayId : dayId;
+  const task = item && item.bookingTaskId ? findCk(tr, item.bookingTaskId) : null;
+  openModal({
+    title: item ? t('editStop') : t('addStopTitle'), submitLabel: item ? t('save') : t('add'),
+    body: `
+      ${field('title', t('f_title'), input('title', v.title, `placeholder="${t('ph_item')}" maxlength="90"`), { required: true })}
+      <div class="field" data-name="where"><span class="flabel">${t('f_where')}</span>
+        <div class="pillseg full" role="radiogroup">
+          <label><input type="radio" name="where" value="ideas" ${where === 'ideas' ? 'checked' : ''}><span>${t('where_ideas')}</span></label>
+          <label><input type="radio" name="where" value="day" ${where === 'day' ? 'checked' : ''}><span>${t('where_day')}</span></label>
+        </div></div>
+      ${field('dayId', t('f_day'), select('dayId', tr.days.map((d, i) => [d.id, `${t('day', { n: i + 1 })} · ${fmtLong(d.date)}`]), curDay || (dayOfDate(tr, TODAY) || tr.days[0]).id), { hidden: where !== 'day' })}
+      <div class="grid2">
+        ${field('time', t('f_time'), input('time', v.time, 'type="time"'), { optional: true })}
+        ${field('durationMin', t('f_duration'), select('durationMin', [['', '—'], ...DURATIONS.map((m) => [m, fmtDur(m)])], v.durationMin))}
+      </div>
+      <div class="field" data-name="category"><span class="flabel">${t('f_category')}</span>
+        <div class="chips" role="radiogroup">${ITEM_CATS.map((c) => `<label><input type="radio" name="category" value="${c}" ${v.category === c ? 'checked' : ''}><span>${t('ic_' + c)}</span></label>`).join('')}</div></div>
+      ${field('location', t('f_location'), input('location', v.location, `placeholder="${t('ph_location')}"`), { optional: true })}
+      ${field('note', t('f_note'), `<textarea class="textarea" id="f-note" name="note" placeholder="${t('ph_note')}" style="min-height:64px">${esc(v.note)}</textarea>`, { optional: true })}
+      <label class="check-line"><input type="checkbox" class="ck" name="needsBooking" ${v.needsBooking ? 'checked' : ''}><span>${t('f_needsBooking')}</span></label>
+      ${field('bookBy', t('f_bookBy'), input('bookBy', task ? task.item.dueDate : '', `type="date" max="${tr.startDate}"`), { optional: true, hidden: !v.needsBooking })}
+      ${item && item.dayId ? `<label class="check-line"><input type="checkbox" class="ck" name="done" ${v.done ? 'checked' : ''}><span>${t('f_done')}</span></label>` : ''}
+      ${item ? `<button type="button" class="btn btn-danger-outline btn-sm" style="align-self:flex-start" data-action="delete-stop" data-id="${item.id}" data-trip="${tr.id}">${t('delete')}</button>` : ''}`,
+    validate: (d) => {
+      const e = {};
+      const title = (d.title || '').trim();
+      if (title.length < 2 || title.length > 80) e.title = t('errTitle');
+      if (d.time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(d.time)) e.time = 'HH:mm';
+      return e;
+    },
+    onSubmit: (d) => {
+      const data = { title: d.title.trim(), category: d.category, time: d.time, durationMin: d.durationMin ? +d.durationMin : '', location: d.location.trim(), note: d.note.trim(), needsBooking: !!d.needsBooking };
+      const targetKey = d.where === 'day' ? 'day:' + d.dayId : 'ideas';
+      let it = item;
+      if (it) {
+        Object.assign(it, data);
+        if ('done' in d || it.dayId) it.done = !!d.done && d.where === 'day';
+        const curKey = it.dayId ? 'day:' + it.dayId : 'ideas';
+        if (curKey !== targetKey) moveItem(tr, it.id, targetKey, null);
+      } else {
+        it = { id: uid(), ...data, bookingTaskId: '', done: false, dayId: null };
+        tr.items[it.id] = it;
+        moveItem(tr, it.id, targetKey, null);
+      }
+      syncBooking(tr, it, d.bookBy);
+      toast(item ? t('saved') : (it.needsBooking && it.bookingTaskId ? t('taskCreated') : t('saved')));
+    },
+  });
+}
+/** needsBooking ↔ task in «Before the trip» */
+function syncBooking(tr, it, bookBy) {
+  const tg = tasksGroup(tr);
+  const linked = it.bookingTaskId ? findCk(tr, it.bookingTaskId) : null;
+  if (it.needsBooking) {
+    if (linked) { linked.item.text = t('bookPrefix') + it.title; linked.item.dueDate = bookBy || ''; }
+    else { const task = { id: uid(), text: t('bookPrefix') + it.title, done: false, dueDate: bookBy || '', sourceItemId: it.id }; tg.items.push(task); it.bookingTaskId = task.id; }
+  } else if (linked) {
+    linked.group.items = linked.group.items.filter((x) => x.id !== linked.item.id);
+    it.bookingTaskId = '';
+  }
+}
+function moveItem(tr, id, key, beforeId) {
+  if (beforeId === id) return;
+  tr.days.forEach((d) => (d.itemIds = d.itemIds.filter((x) => x !== id)));
+  tr.ideaIds = tr.ideaIds.filter((x) => x !== id);
+  const list = key === 'ideas' ? tr.ideaIds : tr.days.find((d) => d.id === key.slice(4)).itemIds;
+  let at = beforeId ? list.indexOf(beforeId) : list.length;
+  if (at < 0) at = list.length;
+  list.splice(at, 0, id);
+  tr.items[id].dayId = key === 'ideas' ? null : key.slice(4);
+  if (!tr.items[id].dayId) tr.items[id].done = false;
+}
+function deleteStop(tr, id) {
+  const it = tr.items[id];
+  tr.days.forEach((d) => (d.itemIds = d.itemIds.filter((x) => x !== id)));
+  tr.ideaIds = tr.ideaIds.filter((x) => x !== id);
+  if (it.bookingTaskId) { const l = findCk(tr, it.bookingTaskId); if (l) l.item.sourceItemId = ''; }
+  delete tr.items[id];
+}
+
+/* ---------- Expense form ---------- */
+function openExpenseForm(tr, ex) {
+  const inTrip = TODAY >= tr.startDate && TODAY <= tr.endDate;
+  const v = ex || { title: '', amount: '', category: 'food', date: inTrip ? TODAY : tr.startDate };
+  openModal({
+    title: ex ? t('editExpense') : t('addExpense'), submitLabel: ex ? t('save') : t('add'),
+    body: `
+      ${field('title', t('f_what'), input('title', v.title, `placeholder="${t('ph_what')}" maxlength="90"`), { required: true })}
+      <div class="grid2">
+        ${field('amount', t('f_amount', { c: tr.currency }), input('amount', v.amount, 'type="number" min="0" step="0.01" inputmode="decimal" placeholder="0"'), { required: true })}
+        ${field('category', t('f_category'), select('category', EXP_CATS.map((c) => [c, t('cat_' + c)]), v.category))}
+      </div>
+      ${field('date', t('f_date'), input('date', v.date, `type="date" min="${tr.startDate}" max="${tr.endDate}"`), { optional: true })}`,
+    validate: (d) => {
+      const e = {};
+      if (!(d.title || '').trim()) e.title = t('errWhat');
+      if (d.amount === '' || isNaN(+d.amount) || +d.amount <= 0) e.amount = t('errAmount');
+      if (d.date && (d.date < tr.startDate || d.date > tr.endDate)) e.date = t('errDateRange');
+      return e;
+    },
+    onSubmit: (d) => {
+      const data = { title: d.title.trim(), amount: Math.round(+d.amount * 100) / 100, category: d.category, date: d.date };
+      if (ex) Object.assign(ex, data); else tr.expenses.push({ id: uid(), ...data });
+      toast(t('saved'));
+    },
+  });
+}
+
+/* ---------- Group form ---------- */
+function openGroupForm(tr, g) {
+  openModal({
+    title: g ? t('renameGroup') : t('newGroup'), submitLabel: g ? t('save') : t('add'),
+    body: field('name', t('f_groupName'), input('name', g ? g.title : '', `placeholder="${t('ph_group')}" maxlength="40"`), { required: true }),
+    validate: (d) => ((d.name || '').trim() ? {} : { name: t('errName') }),
+    onSubmit: (d) => { if (g) g.title = d.name.trim(); else tr.groups.push({ id: uid(), kind: 'packing', title: d.name.trim(), items: [] }); },
+  });
+}
+function confirmDialog({ title, message, confirmLabel, onConfirm }) {
+  openModal({ title, body: `<p class="msg">${message}</p>`, submitLabel: confirmLabel || t('delete'), danger: true, onSubmit: onConfirm });
+}
+
+/* =====================================================================
+   Toast (with optional undo)
+   ===================================================================== */
+let toastTimer, toastUndo = null;
+function toast(msg, undo) {
+  const el = document.getElementById('toast');
+  toastUndo = undo || null;
+  el.innerHTML = `<span>${esc(msg)}</span>${undo ? `<button type="button" data-action="toast-undo">${t('undo')}</button>` : ''}`;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.classList.remove('show'); toastUndo = null; }, undo ? 5000 : 2400);
+}
+
+/* =====================================================================
+   Events
+   ===================================================================== */
+const currentTrip = (el) => {
+  const id = el && el.dataset && el.dataset.trip;
+  if (id) return getTrip(id);
+  const r = route(); return r.name === 'trip' ? getTrip(r.id) : null;
+};
+let suppressClick = false;
+
+document.addEventListener('click', (e) => {
+  if (suppressClick) { e.preventDefault(); e.stopPropagation(); suppressClick = false; return; }
+  if (e.target.matches('[data-overlay]')) { closeModal(); return; }
+  if (ui.themeMenu && !e.target.closest('.theme-wrap')) { ui.themeMenu = false; renderHeader(); }
+  const a = e.target.closest('[data-action]');
+  const link = e.target.closest('[data-href]');
+  if (!a && link) { location.hash = link.dataset.href; return; }
+  if (!a) return;
+  const act = a.dataset.action;
+  const tr = currentTrip(a);
+
+  switch (act) {
+    case 'lang': state.settings.language = a.dataset.v; commit(); break;
+    case 'theme-menu': ui.themeMenu = !ui.themeMenu; renderHeader(); break;
+    case 'theme': state.settings.theme = a.dataset.v; ui.themeMenu = false; commit(); break;
+    case 'close-modal': closeModal(); break;
+    case 'status': ui.status = a.dataset.v; render(); break;
+    case 'sort': { const k = a.dataset.v; if (ui.sort === k) ui.dir = ui.dir === 'asc' ? 'desc' : 'asc'; else { ui.sort = k; ui.dir = k === 'ready' || k === 'spent' ? 'desc' : 'asc'; } render(); break; }
+    case 'reset-filters': ui.q = ''; ui.status = 'all'; render(); break;
+    case 'new-trip': openTripForm(); break;
+    case 'edit-trip': openTripForm(getTrip(a.dataset.id)); break;
+    case 'delete-trip': {
+      const trip = getTrip(a.dataset.id);
+      confirmDialog({ title: t('deleteTripQ'), message: t('deleteTripMsg', { t: esc(trip.title) }), onConfirm: () => {
+        state.trips = state.trips.filter((x) => x.id !== trip.id);
+        if (route().name === 'trip') location.hash = '#/';
+        toast(t('deleted'));
+      } });
+      break;
+    }
+    case 'board-scroll': { const b = document.querySelector('[data-board="plan"]'); b && b.scrollBy({ left: +a.dataset.dir * (252 * 3), behavior: 'smooth' }); break; }
+    case 'mday': ui.mDay[tr.id] = a.dataset.v; render(); break;
+    case 'add-stop': openStopForm(tr, a.dataset.day || null); break;
+    case 'edit-stop': openStopForm(tr, null, tr.items[a.dataset.id]); break;
+    case 'delete-stop': {
+      const it = tr.items[a.dataset.id];
+      closeModal();
+      confirmDialog({ title: t('deleteStopQ'), message: t('deleteMsg', { t: esc(it.title) }), onConfirm: () => { deleteStop(tr, it.id); toast(t('deleted')); } });
+      break;
+    }
+    case 'mark-done': {
+      const it = tr.items[a.dataset.id]; it.done = true; commit();
+      toast(t('markedDone', { t: it.title }), () => { it.done = false; commit(); });
+      break;
+    }
+    case 'toast-undo': if (toastUndo) { toastUndo(); toastUndo = null; document.getElementById('toast').classList.remove('show'); } break;
+    case 'start-add': ui.adding = a.dataset.group; pendingFocus = `.inline-add[data-group="${a.dataset.group}"] input[name="text"]`; render(); break;
+    case 'cancel-add': ui.adding = null; render(); break;
+    case 'delete-ck': {
+      const ct = tr || state.trips.find((x) => findCk(x, a.dataset.id));
+      const f = findCk(ct, a.dataset.id);
+      if (f.item.sourceItemId && ct.items[f.item.sourceItemId]) { ct.items[f.item.sourceItemId].needsBooking = false; ct.items[f.item.sourceItemId].bookingTaskId = ''; }
+      f.group.items = f.group.items.filter((x) => x !== f.item); commit(); break;
+    }
+    case 'ck-filter': ui.ckFilter = a.dataset.v; render(); break;
+    case 'add-group': openGroupForm(tr); break;
+    case 'rename-group': openGroupForm(tr, tr.groups.find((g) => g.id === a.dataset.id)); break;
+    case 'delete-group': {
+      const g = tr.groups.find((x) => x.id === a.dataset.id);
+      confirmDialog({ title: t('deleteGroupQ'), message: t('deleteGroupMsg', { t: esc(g.title) }), onConfirm: () => { tr.groups = tr.groups.filter((x) => x !== g); toast(t('deleted')); } });
+      break;
+    }
+    case 'add-expense': openExpenseForm(tr); break;
+    case 'edit-expense': openExpenseForm(tr, tr.expenses.find((x) => x.id === a.dataset.id)); break;
+    case 'delete-expense': {
+      const ex = tr.expenses.find((x) => x.id === a.dataset.id);
+      confirmDialog({ title: t('deleteExpenseQ'), message: t('deleteMsg', { t: esc(ex.title) }), onConfirm: () => { tr.expenses = tr.expenses.filter((x) => x !== ex); toast(t('deleted')); } });
+      break;
+    }
+    case 'reset-demo':
+      confirmDialog({ title: t('resetDemoQ'), message: t('resetDemoMsg'), confirmLabel: t('reset'), onConfirm: () => {
+        state = seed(L()); Object.assign(ui, { q: '', status: 'all', cat: 'all', expCat: 'all', ckFilter: 'all', mDay: {}, adding: null }); location.hash = '#/';
+      } });
+      break;
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (modal) closeModal();
+    else if (ui.themeMenu) { ui.themeMenu = false; renderHeader(); }
+    else if (ui.adding && e.target.closest('.inline-add')) { ui.adding = null; render(); }
+  }
+  if (e.key === 'Enter' && !modal) {
+    if (e.target.matches('[data-href]')) location.hash = e.target.dataset.href;
+    else if (e.target.matches('[data-drag], .nrow')) e.target.click();
+  }
+});
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'search') { ui.q = e.target.value; document.getElementById('results').innerHTML = renderResults(); return; }
+  const form = e.target.closest('#modal-form');
+  if (form && modal) { modal.touched.add(e.target.name); const f = e.target.closest('.field'); if (modal.submitted || (f && f.classList.contains('invalid'))) showErrors(form); }
+  const ia = e.target.closest('.inline-add');
+  if (ia) ia.querySelector('.err').textContent = '';
+});
+document.addEventListener('focusout', (e) => {
+  const form = e.target.closest && e.target.closest('#modal-form');
+  if (form && modal && e.target.name && e.target.type !== 'radio' && e.target.type !== 'checkbox') { modal.touched.add(e.target.name); showErrors(form); }
+});
+document.addEventListener('change', (e) => {
+  const el = e.target;
+  if (el.dataset.ui === 'sortCombo') { const [s, d] = el.value.split('_'); ui.sort = s; ui.dir = d; render(); return; }
+  if (el.dataset.ui) { ui[el.dataset.ui] = el.value; render(); return; }
+  if (el.dataset.ck) {
+    const r = route();
+    const tr = r.name === 'trip' ? getTrip(r.id) : state.trips.find((x) => findCk(x, el.dataset.ck));
+    const f = findCk(tr, el.dataset.ck); f.item.done = el.checked;
+    pendingFocus = `[data-ck="${f.item.id}"]`; commit(); return;
+  }
+  const form = el.closest('#modal-form');
+  if (form) {
+    if (el.name === 'where') form.querySelector('[data-name="dayId"]').hidden = el.value !== 'day';
+    if (el.name === 'needsBooking') form.querySelector('[data-name="bookBy"]').hidden = !el.checked;
+  }
+});
+
+document.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target;
+  if (form.id === 'modal-form' && modal) {
+    modal.submitted = true;
+    const errs = showErrors(form);
+    if (Object.keys(errs).length) { form.querySelector('.field.invalid .input, .field.invalid .select, .field.invalid .textarea')?.focus(); return; }
+    const m = modal; const d = formData(form);
+    closeModal(); m.onSubmit(d); commit();
+    return;
+  }
+  if (form.dataset.form === 'ck-add') {
+    const text = form.elements.text.value.trim();
+    if (!text) { form.querySelector('.err').textContent = t('errRequired'); form.elements.text.focus(); return; }
+    const tr = currentTrip(form) || state.trips.find((x) => x.groups.some((g) => g.id === form.dataset.group));
+    const g = tr.groups.find((x) => x.id === form.dataset.group);
+    g.items.push({ id: uid(), text, done: false, dueDate: form.elements.dueDate ? form.elements.dueDate.value : '', sourceItemId: '' });
+    pendingFocus = `.inline-add[data-group="${g.id}"] input[name="text"]`;
+    commit();
+  }
+});
+
+/* =====================================================================
+   Drag & drop — pointer events (mouse: drag after 6px; touch: long-press 380ms)
+   In the real app this is dnd-kit (PointerSensor + TouchSensor with delay).
+   ===================================================================== */
+let dnd = null;
+document.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0 || modal) return;
+  const card = e.target.closest('[data-drag]');
+  if (!card || e.target.closest('button, input, select, textarea, a')) return;
+  dnd = { card, id: card.dataset.drag, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, active: false, touch: e.pointerType !== 'mouse' };
+  if (!dnd.touch) e.preventDefault(); // no text selection while dragging with a mouse
+  if (dnd.touch) dnd.timer = setTimeout(() => { if (dnd && !dnd.active) { startDrag(); navigator.vibrate && navigator.vibrate(12); } }, 380);
+});
+document.addEventListener('pointermove', (e) => {
+  if (!dnd) return;
+  dnd.x = e.clientX; dnd.y = e.clientY;
+  if (!dnd.active) {
+    const dist = Math.hypot(dnd.x - dnd.x0, dnd.y - dnd.y0);
+    if (dnd.touch) { if (dist > 10) { clearTimeout(dnd.timer); dnd = null; } return; }
+    if (dist < 6) return;
+    startDrag();
+  }
+  e.preventDefault();
+  moveDrag();
+});
+document.addEventListener('pointerup', () => {
+  if (!dnd) return;
+  clearTimeout(dnd.timer);
+  if (dnd.active) { finishDrag(true); suppressClick = true; setTimeout(() => (suppressClick = false), 0); }
+  dnd = null;
+});
+document.addEventListener('pointercancel', () => { if (!dnd) return; clearTimeout(dnd.timer); if (dnd.active) finishDrag(false); dnd = null; });
+document.addEventListener('touchmove', (e) => { if (dnd && dnd.active) e.preventDefault(); }, { passive: false });
+document.addEventListener('contextmenu', (e) => { if (e.target.closest('[data-drag]')) e.preventDefault(); });
+
+function startDrag() {
+  const c = dnd.card, r = c.getBoundingClientRect();
+  dnd.active = true; dnd.dx = dnd.x0 - r.left; dnd.dy = dnd.y0 - r.top;
+  const g = c.cloneNode(true);
+  g.classList.add('ghost'); g.classList.remove('dim'); g.style.width = r.width + 'px';
+  document.body.appendChild(g); dnd.ghost = g;
+  dnd.ph = document.createElement('div'); dnd.ph.className = 'ph';
+  dnd.ph.style.height = r.height + 'px';
+  c.classList.add('drag-src'); document.body.classList.add('dragging');
+  moveDrag();
+  dnd.raf = requestAnimationFrame(autoScroll);
+}
+function moveDrag() {
+  const { x, y } = dnd;
+  dnd.ghost.style.transform = `translate(${x - dnd.dx}px, ${y - dnd.dy}px) rotate(-2.5deg)`;
+  const el = document.elementFromPoint(x, y);
+  const list = el && el.closest('[data-drop]');
+  document.querySelectorAll('.drop-hl').forEach((l) => l !== list && l.classList.remove('drop-hl'));
+  if (!list) { dnd.ph.remove(); dnd.target = null; return; }
+  list.classList.add('drop-hl');
+  const horiz = list.dataset.axis === 'x';
+  dnd.ph.style.width = horiz ? '72px' : '';
+  dnd.ph.style.height = horiz ? '40px' : dnd.card.getBoundingClientRect().height + 'px';
+  const cards = [...list.querySelectorAll(':scope > [data-drag]')].filter((c) => c !== dnd.card);
+  const before = cards.find((c) => { const r = c.getBoundingClientRect(); return horiz ? x < r.left + r.width / 2 : y < r.top + r.height / 2; });
+  if (before) { if (dnd.ph.nextSibling !== before) list.insertBefore(dnd.ph, before); }
+  else { const add = list.querySelector(':scope > .ichip.add'); if (add) list.insertBefore(dnd.ph, add); else list.appendChild(dnd.ph); }
+  dnd.target = { key: list.dataset.drop, beforeId: before ? before.dataset.drag : null };
+}
+function autoScroll() {
+  if (!dnd || !dnd.active) return;
+  let moved = false;
+  const b = document.querySelector('[data-board="plan"]');
+  if (b && b.offsetParent) {
+    const r = b.getBoundingClientRect();
+    if (dnd.y > r.top && dnd.y < r.bottom) {
+      if (dnd.x < r.left + 70) { b.scrollLeft -= 14; moved = true; }
+      else if (dnd.x > r.right - 70) { b.scrollLeft += 14; moved = true; }
+    }
+  }
+  if (dnd.y < 70) { scrollBy(0, -12); moved = true; }
+  else if (dnd.y > innerHeight - 70) { scrollBy(0, 12); moved = true; }
+  if (moved) moveDrag();
+  dnd.raf = requestAnimationFrame(autoScroll);
+}
+function finishDrag(apply) {
+  cancelAnimationFrame(dnd.raf);
+  dnd.ghost.remove(); dnd.ph.remove();
+  dnd.card.classList.remove('drag-src'); document.body.classList.remove('dragging');
+  document.querySelectorAll('.drop-hl').forEach((l) => l.classList.remove('drop-hl'));
+  if (apply && dnd.target) { const tr = currentTrip(); moveItem(tr, dnd.id, dnd.target.key, dnd.target.beforeId); commit(); }
+}
+
+/* =====================================================================
+   Boot
+   ===================================================================== */
+addEventListener('hashchange', () => { ui.adding = null; render(); });
+render();
+</script>
+</body>
+</html>

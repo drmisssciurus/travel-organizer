@@ -1,0 +1,45 @@
+.board {
+  position: relative; /* offsetLeft of the columns is measured from here */
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 2px 2px 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  border-radius: var(--radius-card-sm);
+}
+
+.dragging {
+  scroll-snap-type: none;
+}
+
+.count {
+  font-size: var(--fs-label);
+  color: var(--color-muted);
+}
+
+.todayTag {
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+}
+
+.add {
+  height: 40px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 14px;
+  background: transparent;
+  font: inherit;
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.add:hover {
+  background: var(--color-card);
+}

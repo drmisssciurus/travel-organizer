@@ -1,0 +1,131 @@
+.avatar {
+  position: relative;
+  flex: none;
+  width: var(--control-h);
+  height: var(--control-h);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--tan);
+  color: var(--cafe-noir);
+  font: inherit;
+  font-weight: var(--fw-bold);
+}
+
+.button {
+  border: 0;
+  cursor: pointer;
+}
+
+.button:hover {
+  box-shadow: 0 0 0 3px var(--color-moss-tint);
+}
+
+.signedOut {
+  background: var(--color-inset);
+  color: var(--color-text);
+}
+
+.dot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-card);
+  border-radius: 50%;
+}
+
+.ok {
+  background: var(--color-accent);
+}
+
+.warn {
+  background: var(--color-ochre);
+}
+
+.bad {
+  background: var(--color-error);
+}
+
+.busy {
+  background: var(--color-accent);
+  animation: pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  to {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .busy {
+    animation: none;
+  }
+}
+
+/* On phones the decorative avatar is hidden (as before); the account button stays, smaller */
+@media (max-width: 720px) {
+  .decorative {
+    display: none;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ---------- Dialog ---------- */
+
+.form,
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.info p {
+  margin: 0;
+}
+
+.email {
+  font-weight: var(--fw-bold);
+  color: var(--color-heading);
+  overflow-wrap: anywhere;
+}
+
+.footerStart {
+  margin-inline-end: auto;
+}
+
+.error,
+.notice {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-meta);
+}
+
+.error {
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  color: var(--color-error);
+}
+
+.notice {
+  background: var(--color-moss-tint);
+  color: var(--color-text);
+}
+
+.switch {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent-text);
+  font: inherit;
+  font-weight: var(--fw-bold);
+  text-decoration: underline;
+  cursor: pointer;
+}

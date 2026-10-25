@@ -1,0 +1,52 @@
+.root {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.root:has(.box:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.box {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--color-heading);
+  border-radius: 5px;
+  background: var(--color-card);
+  cursor: inherit;
+  transition: background-color var(--duration-fast);
+}
+
+.box:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* check mark drawn with borders */
+.box:checked::after {
+  content: '';
+  width: 10px;
+  height: 5px;
+  border-left: 2px solid var(--color-on-primary);
+  border-bottom: 2px solid var(--color-on-primary);
+  transform: translateY(-1px) rotate(-45deg);
+}
+
+.label {
+  padding-top: 1px;
+}
+
+.strike .box:checked + .label {
+  text-decoration: line-through;
+  color: var(--color-muted);
+}

@@ -1,0 +1,24 @@
+.head {
+  padding: var(--space-5);
+  margin-bottom: 18px;
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.tabs {
+  margin-top: var(--space-4);
+}
+
+/* On mobile the tabs live in the bottom navigation */
+@media (max-width: 720px) {
+  .head {
+    padding: var(--space-4);
+    border-radius: var(--radius-card-sm);
+  }
+
+  /* .head .tabs — more specific than TabNav's own .tabs, independent of CSS order */
+  .head .tabs {
+    display: none;
+  }
+}

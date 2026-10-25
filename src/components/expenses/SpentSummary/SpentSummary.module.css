@@ -1,0 +1,29 @@
+.card {
+  padding: var(--space-5) var(--space-5) 22px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-radius: var(--radius-card);
+}
+
+.label {
+  margin: 0;
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: inherit;
+}
+
+.total {
+  margin: 6px 0 4px;
+  font-size: 36px;
+  font-weight: var(--fw-bold);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: 0;
+  font-size: var(--fs-meta);
+}

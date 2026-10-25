@@ -1,0 +1,63 @@
+.card {
+  position: relative; /* anchor for the stretched link */
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  padding: 14px;
+  background: var(--color-card);
+  border-radius: var(--radius-card-sm);
+  box-shadow: var(--shadow-card);
+  transition: background-color var(--duration-fast);
+}
+
+.card:hover {
+  background: var(--color-inset-2);
+}
+
+/* Focus ring on the whole card when the link inside is focused with the keyboard */
+.card:has(.link:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.body {
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--fs-body);
+  margin: 0;
+}
+
+.link {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-heading);
+  text-decoration: none;
+  outline: none; /* the card shows the focus ring instead */
+}
+
+/* Stretched link: covers the whole card */
+.link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 2px 0 var(--space-2);
+  font-size: var(--fs-meta);
+}
+
+.meta {
+  margin: var(--space-1) 0 0;
+  font-size: var(--fs-meta);
+  color: var(--color-muted);
+}

@@ -1,0 +1,32 @@
+/* A narrow single column: the screen is used on the go, mostly on a phone */
+.page {
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: 18px;
+}
+
+.section {
+  margin: 22px 0 10px;
+}
+
+.dayEmpty {
+  margin-bottom: 22px;
+}
+
+.expense {
+  margin-top: 22px;
+}
+
+/* On phones the plan is one tap away in the bottom navigation */
+@media (max-width: 720px) {
+  .planLink {
+    display: none;
+  }
+}

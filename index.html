@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#354024" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="waypoint — travel organizer: day-by-day plan, expenses and checklist" />
+    <script>
+      // Apply the saved theme and language before the first paint — no flash of the wrong theme.
+      // Reads the same key as src/store/persist.ts (STORAGE_KEY = 'waypoint'). Keep them in sync.
+      ;(function () {
+        try {
+          var saved = JSON.parse(localStorage.getItem('waypoint') || 'null')
+          var settings = saved && saved.state && saved.state.settings
+          if (!settings) return
+          var root = document.documentElement
+          if (settings.theme === 'light' || settings.theme === 'dark') root.dataset.theme = settings.theme
+          if (settings.language === 'en' || settings.language === 'ru') root.lang = settings.language
+        } catch (e) {
+          /* storage unavailable — fall back to the OS theme */
+        }
+      })()
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&display=swap" rel="stylesheet" />
+    <title>waypoint</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,73 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 48px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: 16px;
+  transition:
+    background-color var(--duration-fast),
+    outline-color var(--duration-fast);
+  outline: 1.5px dashed transparent;
+  outline-offset: 4px;
+}
+
+/* Drop zone of the column the item is being moved into */
+.receiving {
+  background: var(--color-moss-tint);
+  outline-color: var(--color-accent);
+}
+
+.empty {
+  padding: 14px 6px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 16px;
+  font-size: var(--fs-meta);
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* ---------- Chips (mobile "Ideas" sheet) ---------- */
+
+.chips {
+  flex-direction: row;
+  gap: var(--space-2);
+  min-height: 42px;
+  padding: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chips .empty {
+  flex: 1;
+  padding: 10px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-4);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.chipGhost {
+  opacity: 0.35;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}

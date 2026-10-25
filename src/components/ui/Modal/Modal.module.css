@@ -1,0 +1,108 @@
+.dialog {
+  width: min(100% - 32px, var(--modal-width, 440px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 32px;
+  background: var(--color-card);
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
+  animation: modal-in var(--duration-base) var(--ease-out);
+}
+
+.dialog::backdrop {
+  background: var(--color-overlay);
+  animation: backdrop-in var(--duration-base) ease-out;
+}
+
+.sm {
+  --modal-width: 400px;
+}
+.md {
+  --modal-width: 440px;
+}
+.lg {
+  --modal-width: 560px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 26px 26px 0;
+}
+
+.title {
+  font-size: 22px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: var(--space-4) 26px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 26px 26px;
+}
+
+/* Mobile: slides up from the bottom like a sheet */
+@media (max-width: 720px) {
+  .dialog {
+    width: 100%;
+    max-width: none;
+    max-height: 92dvh;
+    margin: auto 0 0;
+    border-radius: 28px 28px 0 0;
+    animation-name: sheet-in;
+  }
+
+  .dialog[open] {
+    animation-name: sheet-in;
+  }
+
+  .header {
+    padding: 22px 18px 0;
+  }
+
+  .body {
+    padding: var(--space-4) 18px;
+  }
+
+  .footer {
+    padding: 0 18px calc(22px + env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}

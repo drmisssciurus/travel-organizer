@@ -1,0 +1,35 @@
+.main {
+  padding-block: var(--space-8) var(--space-10);
+}
+
+@media (max-width: 720px) {
+  .main {
+    padding-top: var(--space-5);
+    /* room for the fixed bottom navigation + iOS home indicator */
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Focused programmatically after navigation — no ring around the whole page */
+.main:focus {
+  outline: none;
+}
+
+/* Hidden until focused with Tab */
+.skip {
+  position: fixed;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-toast);
+  padding: 10px var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip:focus {
+  transform: none;
+}

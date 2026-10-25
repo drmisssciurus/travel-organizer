@@ -1,0 +1,60 @@
+/* Mobile-only persistent panel (e.g. "Ideas" on the plan). Hidden on wider screens. */
+.sheet {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .sheet {
+    position: fixed;
+    inset-inline: var(--space-3);
+    bottom: calc(90px + env(safe-area-inset-bottom)); /* sits above the bottom nav */
+    z-index: calc(var(--z-sticky) - 10);
+    display: flex;
+    flex-direction: column;
+    padding: 10px var(--space-4) 14px;
+    border-radius: 24px 24px 18px 18px;
+    background: var(--color-inset);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.handle {
+  align-self: center;
+  width: 44px;
+  height: 5px;
+  margin-bottom: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-border);
+  cursor: pointer;
+}
+
+/* bigger tap target than the visible bar */
+.handle::after {
+  content: '';
+  position: absolute;
+  inset: -12px -40px;
+}
+
+.handle {
+  position: relative;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.content {
+  overflow: auto;
+  max-height: 96px; /* collapsed: one row of chips */
+  transition: max-height var(--duration-base) var(--ease-out);
+}
+
+.expanded .content {
+  max-height: 45dvh;
+}

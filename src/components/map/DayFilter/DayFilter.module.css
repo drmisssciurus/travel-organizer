@@ -1,0 +1,59 @@
+/* One scrolling row (like the day chips of the mobile plan): a 14-day trip doesn't wrap into a wall */
+.chips {
+  display: flex;
+  gap: var(--space-2);
+  margin-inline: calc(-1 * var(--page-gutter));
+  padding: 2px var(--page-gutter) 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.chip {
+  flex: none;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-card);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--color-inset-2);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  /* the dot stays visible on the dark "pressed" background */
+  box-shadow: 0 0 0 2px var(--color-card);
+}
+
+.date {
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-meta);
+}
+
+.count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-inset);
+  color: var(--color-text);
+  font-size: var(--fs-label);
+  text-align: center;
+}

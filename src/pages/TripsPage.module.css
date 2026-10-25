@@ -1,0 +1,55 @@
+/* Trips page layout. Table on desktop, cards on narrow screens (≤ 860px: the table no longer fits). */
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.cards {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 860px) {
+  .table {
+    display: none;
+  }
+
+  .cards {
+    display: flex;
+  }
+}
+
+/* Floating "New trip" button: only on phones, above the bottom navigation */
+.fab {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .newButton {
+    display: none;
+  }
+
+  /* Room under the last card, so the floating button doesn't cover it */
+  .cards {
+    padding-bottom: 72px;
+  }
+
+  .fab {
+    display: inline-flex;
+    position: fixed;
+    right: var(--space-4);
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    z-index: var(--z-fab);
+    height: 56px;
+    padding-inline: var(--space-6);
+    box-shadow: var(--shadow-lg);
+  }
+}

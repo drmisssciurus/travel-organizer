@@ -1,0 +1,31 @@
+.layout {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* each card keeps its own height (the dark "Spent" card must not stretch) */
+    align-items: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .side {
+    grid-template-columns: 1fr;
+  }
+}

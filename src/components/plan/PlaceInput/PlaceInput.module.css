@@ -1,0 +1,53 @@
+.root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* In the flow, not a popover: inside a scrolling dialog an absolute list would be clipped */
+.list {
+  margin: 6px 0 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-item);
+  box-shadow: var(--shadow-lg);
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.option:hover,
+.active {
+  background: var(--color-inset-2);
+}
+
+.active {
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.name {
+  font-weight: var(--fw-bold);
+}
+
+.context {
+  font-size: var(--fs-meta);
+  color: var(--color-muted);
+}
+
+.status {
+  margin: 4px 0 0;
+  font-size: var(--fs-meta);
+  color: var(--color-muted);
+}
+
+/* Stays in the DOM (a live region must exist before it changes), takes no space */
+.statusEmpty {
+  margin: 0;
+}

@@ -1,0 +1,19 @@
+/* "3 left" / "all done" */
+.pill,
+.pillDone {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+
+.pill {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.pillDone {
+  background: var(--color-moss-tint);
+  color: var(--color-text);
+}

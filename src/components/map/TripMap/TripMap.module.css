@@ -1,0 +1,186 @@
+.root {
+  position: relative;
+  height: 100%;
+  min-height: 320px;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  /* Leaflet panes use z-index up to 1000 — keep them under the app's menus, toasts and sticky nav */
+  isolation: isolate;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  background: var(--color-inset);
+  font: inherit;
+}
+
+/* "Set on map" mode */
+.placing :global(.leaflet-container) {
+  cursor: crosshair;
+}
+
+/* OSM tiles are always light: in the dark theme they are inverted to a dark map
+   (the hue rotation keeps water blue and parks green) */
+:root[data-theme='dark'] .tiles {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .tiles {
+    filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6);
+  }
+}
+
+/* ---------- Markers ---------- */
+
+/* Leaflet adds its own white box to div icons — removed */
+.pinWrap {
+  background: none;
+  border: 0;
+}
+
+.pin {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50% 50% 50% 4px;
+  color: #fff;
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: var(--fw-bold);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+  transition: transform var(--duration-fast);
+}
+
+.pinWrap:hover .pin,
+.pinWrap:focus-visible .pin {
+  transform: scale(1.15);
+}
+
+.pinWrap:focus-visible {
+  outline: none;
+}
+
+.pinWrap:focus-visible .pin {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Done stops stay on the route, just quieter */
+.pinDone {
+  opacity: 0.6;
+}
+
+/* ---------- Popup ---------- */
+
+.root :global(.leaflet-popup-content-wrapper),
+.root :global(.leaflet-popup-tip) {
+  background: var(--color-card);
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+}
+
+.root :global(.leaflet-popup-content-wrapper) {
+  border-radius: var(--radius-item);
+}
+
+.root :global(.leaflet-popup-content) {
+  margin: 14px 16px;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+.root :global(.leaflet-container a.leaflet-popup-close-button) {
+  color: var(--color-muted);
+}
+
+.popup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 170px;
+}
+
+.popupTitle {
+  color: var(--color-heading);
+}
+
+.popupMeta {
+  font-size: var(--fs-meta);
+  color: var(--color-muted);
+}
+
+/* ---------- Leaflet controls in the app style ---------- */
+
+.root :global(.leaflet-bar) {
+  border: 0;
+  box-shadow: var(--shadow-item);
+}
+
+.root :global(.leaflet-bar a) {
+  background: var(--color-card);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.root :global(.leaflet-control-attribution) {
+  background: color-mix(in srgb, var(--color-card) 85%, transparent);
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+.root :global(.leaflet-control-attribution a) {
+  color: var(--color-text);
+}
+
+/* ---------- Placing banner and empty-state overlay (above the map panes) ---------- */
+
+.banner,
+.overlay {
+  position: absolute;
+  z-index: 1000;
+  inset-inline: var(--space-3);
+}
+
+.banner {
+  top: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  padding: 10px 14px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-radius: var(--radius-item);
+  box-shadow: var(--shadow-lg);
+}
+
+.bannerText {
+  font-weight: var(--fw-bold);
+}
+
+.bannerActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* The map stays visible (and usable) under an empty-state card */
+.overlay {
+  top: 50%;
+  max-width: 380px;
+  margin-inline: auto;
+  transform: translateY(-50%);
+  padding: var(--space-5);
+  background: var(--color-card);
+  border-radius: var(--radius-card-sm);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  pointer-events: none;
+}

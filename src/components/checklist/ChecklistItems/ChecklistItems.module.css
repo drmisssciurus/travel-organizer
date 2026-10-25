@@ -1,0 +1,117 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 12px;
+  background: var(--color-card);
+  border-radius: 14px;
+  box-shadow: var(--shadow-item);
+}
+
+.check {
+  flex: 1;
+  min-width: 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.text {
+  overflow-wrap: anywhere;
+}
+
+.done .text {
+  color: var(--color-muted);
+}
+
+.due {
+  margin-top: 1px;
+  font-size: var(--fs-label);
+  color: var(--color-muted);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.overdue {
+  color: var(--color-error);
+  font-weight: var(--fw-bold);
+}
+
+/* Delete appears on hover / focus (always visible on touch screens) */
+.delete {
+  opacity: 0;
+  transition: opacity var(--duration-fast);
+}
+
+.row:hover .delete,
+.row:focus-within .delete {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .delete {
+    opacity: 1;
+  }
+}
+
+.add {
+  height: 40px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 14px;
+  background: transparent;
+  font: inherit;
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.add:hover {
+  background: var(--color-card);
+}
+
+.addFull {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 10px;
+  background: var(--color-card);
+  border-radius: 14px;
+}
+
+.error {
+  margin: 0;
+  font-size: var(--fs-label);
+  color: var(--color-error);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.empty {
+  margin: 0;
+  padding: 12px 6px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 14px;
+  font-size: var(--fs-meta);
+  color: var(--color-muted);
+  text-align: center;
+}

@@ -1,0 +1,139 @@
+/* =====================================================================
+   Design tokens — waypoint
+   Source: design/Travel Organizer.pdf (page 5, "waypoint · style")
+
+   Theme:
+   - follows the OS setting by default (color-scheme: light dark);
+   - <html data-theme="light|dark"> forces a theme (see stage 1.7).
+   Colors use light-dark(light, dark): one declaration per token,
+   no duplicated block for the dark theme.
+   ===================================================================== */
+
+:root {
+  color-scheme: light dark;
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+:root {
+  /* ---------- Base palette (theme-independent) ---------- */
+  --cafe-noir: #4c3d19;
+  --kombu: #354024;
+  --moss: #889063;
+  --tan: #cfbb99;
+  --bone: #e5d7c4;
+
+  /* ---------- Surfaces ---------- */
+  --color-page: light-dark(#efe6d8, #1b2013);
+  --color-card: light-dark(#faf6ef, #283019);
+  --color-inset: light-dark(#e5d7c4, #323c22); /* board columns, segmented controls */
+  --color-inset-2: light-dark(#eadfcb, #2e371f); /* hover, search field */
+  --color-moss-tint: light-dark(#e1e2cd, #3a4529); /* drop zones, "Upcoming" badge */
+
+  /* ---------- Text ---------- */
+  --color-heading: light-dark(#4c3d19, #f1e8da);
+  --color-text: light-dark(#354024, #f1e8da);
+  --color-muted: light-dark(#62563e, #cfbb99);
+
+  /* ---------- Accents ---------- */
+  --color-primary: light-dark(#354024, #889063);
+  /* text on primary. In the mockup it matched the background in light theme — fixed */
+  --color-on-primary: light-dark(#f1e8da, #1b2013);
+  --color-accent: light-dark(#889063, #a4ad7c); /* progress, readiness */
+  --color-track: light-dark(#e5d7c4, #323c22); /* progress bar background */
+  --color-border: light-dark(#cfbb99, #4b5636);
+  --color-error: light-dark(#a3472b, #e59a7e);
+  --color-ochre: light-dark(#b08a3e, #d2aa5c);
+  /* Text versions of accent / ochre: the fills are too light for small text on cards (WCAG AA ≥ 4.5:1) */
+  --color-accent-text: light-dark(#5a6140, #a4ad7c);
+  --color-ochre-text: light-dark(#7a5a1c, #d2aa5c);
+  --color-focus: var(--color-accent);
+  --color-overlay: light-dark(rgb(60 55 40 / 0.55), rgb(0 0 0 / 0.6));
+
+  /* ---------- Itinerary item categories ---------- */
+  --color-cat-sight: light-dark(#889063, #a4ad7c);
+  --color-cat-food: #cfbb99;
+  --color-cat-transport: light-dark(#354024, #e5d7c4);
+  --color-cat-stay: light-dark(#4c3d19, #c08f6c);
+  --color-cat-activity: light-dark(#b08a3e, #d2aa5c);
+
+  /* ---------- Expense categories ---------- */
+  --color-exp-transport: var(--color-cat-transport);
+  --color-exp-stay: var(--color-cat-stay);
+  --color-exp-food: var(--color-cat-food);
+  --color-exp-activities: var(--color-cat-activity);
+  --color-exp-shopping: light-dark(#889063, #7fa08a);
+  --color-exp-other: light-dark(#9a8f7a, #8c8472);
+
+  /* ---------- Typography ---------- */
+  --font-family: 'Anonymous Pro', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs-title: 28px; /* Title 28 / 700 */
+  --fs-section: 17px; /* Section 17 / 700 */
+  --fs-body: 14px; /* Body 14 / 400 */
+  --fs-meta: 13px; /* Meta 13 / 400 */
+  --fs-label: 12px; /* LABEL 12 / 700 CAPS */
+  --fw-regular: 400;
+  --fw-bold: 700;
+  --lh-tight: 1.15;
+  --lh-body: 1.45;
+  --ls-label: 0.07em;
+
+  /* ---------- Radii ---------- */
+  --radius-card: 28px; /* cards 24–32 */
+  --radius-card-sm: 24px; /* board columns, mobile cards */
+  --radius-item: 18px; /* itinerary items */
+  --radius-input: 14px; /* inputs */
+  --radius-sm: 12px;
+  --radius-pill: 999px; /* buttons, chips, badges */
+
+  /* ---------- Spacing (4px step) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* ---------- Control sizes ---------- */
+  --control-h: 42px;
+  --control-h-sm: 34px;
+  --input-h: 44px;
+
+  /* ---------- Shadows (none in dark theme) ---------- */
+  --shadow-card: 0 1px 2px light-dark(rgb(76 61 25 / 0.06), transparent),
+    0 4px 14px light-dark(rgb(76 61 25 / 0.06), transparent);
+  --shadow-item: 0 1px 2px light-dark(rgb(76 61 25 / 0.08), transparent);
+  --shadow-lg: 0 18px 40px light-dark(rgb(53 64 36 / 0.28), rgb(0 0 0 / 0.55));
+
+  /* ---------- Layers ---------- */
+  --z-sticky: 40;
+  --z-fab: 35;
+  --z-menu: 50;
+  --z-modal: 100;
+  --z-toast: 150;
+  --z-drag: 200;
+
+  /* ---------- Motion ---------- */
+  --duration-fast: 0.15s;
+  --duration-base: 0.2s;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* ---------- Layout ---------- */
+  --container-max: 1360px;
+  --page-gutter: 24px;
+  --bp-mobile: 720px; /* reference only: custom properties don't work inside @media */
+  --bp-tablet: 1024px;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --fs-title: 24px;
+    --page-gutter: 16px;
+  }
+}

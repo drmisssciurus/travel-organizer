@@ -1,0 +1,41 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-3);
+  margin-bottom: var(--space-5);
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.search {
+  flex: 1 1 280px;
+}
+
+/* Sorting by column headers on desktop; the select appears only when the table is hidden */
+.sort {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .sort {
+    display: inline-block;
+    flex: 1 1 200px;
+  }
+}
+
+@media (max-width: 720px) {
+  .toolbar {
+    padding: 10px;
+    border-radius: 22px;
+  }
+
+  /* Status pills on their own row, scrollable if they don't fit */
+  .status {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+  }
+}

@@ -1,0 +1,8 @@
+.summary {
+  padding: 10px 14px;
+  border-radius: var(--radius-input);
+  background: var(--color-inset-2);
+  color: var(--color-error);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+}

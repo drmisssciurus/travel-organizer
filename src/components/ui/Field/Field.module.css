@@ -1,0 +1,28 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 13.5px;
+  font-weight: var(--fw-bold);
+  color: var(--color-heading);
+}
+
+.optional {
+  font-weight: var(--fw-regular);
+  color: var(--color-muted);
+}
+
+.hint {
+  font-size: var(--fs-label);
+  color: var(--color-muted);
+}
+
+.error {
+  font-size: 12.5px;
+  font-weight: var(--fw-bold);
+  color: var(--color-error);
+}
