@@ -9,6 +9,9 @@
 }
 
 .chip {
+  /* Containing block for the visually hidden count: without it the absolutely positioned text
+     escaped the scrolling row and widened the whole page (iOS then zoomed the page out) */
+  position: relative;
   flex: none;
   height: 38px;
   display: inline-flex;

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Button, IconButton, Select } from '@/components/ui'
+import { Button, CloseIcon, EditIcon, IconButton, Select } from '@/components/ui'
 import { useAppSelector } from '@/hooks/store'
 import { selectLanguage } from '@/store/slices/settingsSlice'
 import { EXPENSE_CATEGORIES, type CurrencyCode, type Expense, type ExpenseCategory } from '@/types'
@@ -113,7 +113,7 @@ export function ExpenseTable(props: ExpenseTableProps) {
                       <IconButton
                         shape="square"
                         size="sm"
-                        icon="✎"
+                        icon={<EditIcon />}
                         label={t('expenses.edit', { title: expense.title })}
                         title={t('actions.edit')}
                         onClick={() => onEdit(expense)}
@@ -122,7 +122,7 @@ export function ExpenseTable(props: ExpenseTableProps) {
                         shape="square"
                         size="sm"
                         variant="danger"
-                        icon="×"
+                        icon={<CloseIcon />}
                         label={t('expenses.delete', { title: expense.title })}
                         title={t('actions.delete')}
                         onClick={() => onDelete(expense)}

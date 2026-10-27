@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import { IconButton } from '@/components/ui'
+import { CloseIcon, EditIcon, IconButton } from '@/components/ui'
 import type { ChecklistGroupView } from '@/store/selectors/checklistSelectors'
 import type { ISODate } from '@/types'
 import { ChecklistItems, type ChecklistFilter } from '../ChecklistItems'
@@ -39,11 +39,11 @@ export function ChecklistGroupCard({ view: { group, items }, today, filter, onRe
         </span>
         {!isTasks && (
           <span className={styles.tools}>
-            <IconButton size="sm" variant="ghost" icon="✎" label={t('checklist.renameGroup', { title })} onClick={onRename} />
+            <IconButton size="sm" variant="ghost" icon={<EditIcon />} label={t('checklist.renameGroup', { title })} onClick={onRename} />
             <IconButton
               size="sm"
               variant="ghost"
-              icon="×"
+              icon={<CloseIcon />}
               label={t('checklist.deleteGroup', { title })}
               onClick={onDelete}
             />

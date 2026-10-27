@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
-import { Avatar, IconButton, ProgressBar } from '@/components/ui'
+import { Avatar, CloseIcon, EditIcon, IconButton, ProgressBar } from '@/components/ui'
 import { useAppSelector } from '@/hooks/store'
 import { paths } from '@/routes/paths'
 import { nextTripSort, type TripRow, type TripSort, type TripSortKey } from '@/store/selectors/tripsTable'
@@ -122,7 +122,7 @@ export function TripsTable({ rows, sort, onSortChange, today, onEdit, onDelete }
                     {onEdit && (
                       <IconButton
                         shape="square"
-                        icon="✎"
+                        icon={<EditIcon />}
                         label={t('trips.table.editTrip', { title: trip.title })}
                         title={t('actions.edit')}
                         onClick={() => onEdit(trip)}
@@ -132,7 +132,7 @@ export function TripsTable({ rows, sort, onSortChange, today, onEdit, onDelete }
                       <IconButton
                         shape="square"
                         variant="danger"
-                        icon="×"
+                        icon={<CloseIcon />}
                         label={t('trips.table.deleteTrip', { title: trip.title })}
                         title={t('actions.delete')}
                         onClick={() => onDelete(trip)}

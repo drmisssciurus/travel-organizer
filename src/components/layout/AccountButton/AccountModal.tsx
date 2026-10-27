@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { signIn, signOut, signUp, type AuthError } from '@/api/cloud'
 import { requestSync } from '@/cloud/sync'
 import { useCloudStatus } from '@/cloud/status'
-import { Button, Field, FormErrorSummary, Input, Modal } from '@/components/ui'
+import { Button, Field, FormErrorSummary, Input, Modal, PasswordInput } from '@/components/ui'
 import styles from './AccountButton.module.css'
 
 const PASSWORD_MIN = 8
@@ -120,8 +120,7 @@ function AuthForm({
         hint={mode === 'signUp' ? t('cloud.passwordHint', { count: PASSWORD_MIN }) : undefined}
         error={fieldErrors.password ? t('cloud.passwordHint', { count: PASSWORD_MIN }) : undefined}
       >
-        <Input
-          type="password"
+        <PasswordInput
           autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}

@@ -38,6 +38,28 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 18%, transparent);
 }
 
+/* iOS draws date/time inputs as native controls with their own minimum width: they stuck out
+   of a half-width grid cell and covered the next field. Plain box, shrinkable, text on the left. */
+.control[type='date'],
+.control[type='time'] {
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+}
+
+.control::-webkit-date-and-time-value {
+  min-height: 1.4em; /* an empty iOS date/time field otherwise collapses to zero height */
+  text-align: left;
+}
+
+/* iOS zooms into fields under 16px — 16px on touch screens (see also global.css) */
+@media (pointer: coarse) {
+  .control {
+    font-size: max(16px, 1em);
+  }
+}
+
 /* ---------- Sizes ---------- */
 .sm {
   height: 36px;

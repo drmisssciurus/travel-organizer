@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
-import { Avatar, Button, IconButton, ProgressBar } from '@/components/ui'
+import { Avatar, Button, CloseIcon, EditIcon, IconButton, ProgressBar } from '@/components/ui'
 import { useAppSelector } from '@/hooks/store'
 import { paths } from '@/routes/paths'
 import { selectTripChecklist } from '@/store/selectors/planSelectors'
@@ -72,14 +72,14 @@ export function TripHeader({ trip, today, onEdit, onDelete }: TripHeaderProps) {
 
         <div className={styles.actions}>
           {/* Text buttons on wide screens, icon buttons on phones (one of the pair is hidden by CSS) */}
-          <Button className={styles.wide} icon="✎" onClick={onEdit}>
+          <Button className={styles.wide} icon={<EditIcon />} onClick={onEdit}>
             {t('actions.edit')}
           </Button>
-          <Button className={styles.wide} variant="dangerOutline" icon="×" onClick={onDelete}>
+          <Button className={styles.wide} variant="dangerOutline" icon={<CloseIcon />} onClick={onDelete}>
             {t('actions.delete')}
           </Button>
-          <IconButton className={styles.narrow} icon="✎" label={t('actions.edit')} onClick={onEdit} />
-          <IconButton className={styles.narrow} icon="×" variant="danger" label={t('actions.delete')} onClick={onDelete} />
+          <IconButton className={styles.narrow} icon={<EditIcon />} label={t('actions.edit')} onClick={onEdit} />
+          <IconButton className={styles.narrow} icon={<CloseIcon />} variant="danger" label={t('actions.delete')} onClick={onDelete} />
         </div>
       </div>
 

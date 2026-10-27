@@ -43,6 +43,8 @@ export const en = {
     undo: 'Undo',
   },
   form: {
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
     optional: 'optional',
     fixFields_one: 'Fix {{count}} field to save',
     fixFields_other: 'Fix {{count}} fields to save',

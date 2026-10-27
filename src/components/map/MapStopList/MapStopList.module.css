@@ -120,6 +120,7 @@
 }
 
 .setPlace {
+  position: relative; /* keeps its visually hidden text inside */
   flex: none;
   display: inline-flex;
   align-items: center;

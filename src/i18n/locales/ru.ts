@@ -40,6 +40,8 @@ export const ru = {
     undo: 'Отменить',
   },
   form: {
+    showPassword: 'Показать пароль',
+    hidePassword: 'Скрыть пароль',
     optional: 'необязательно',
     fixFields_one: 'Исправьте {{count}} поле, чтобы сохранить',
     fixFields_few: 'Исправьте {{count}} поля, чтобы сохранить',

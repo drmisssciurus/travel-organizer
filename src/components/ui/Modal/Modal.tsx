@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode, type SyntheticEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cx } from '@/utils/cx'
+import { CloseIcon } from '../icons'
 import { IconButton } from '../IconButton'
 import styles from './Modal.module.css'
 
@@ -76,7 +77,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md', clo
             <h2 id={titleId} className={styles.title}>
               {title}
             </h2>
-            <IconButton label={t('actions.close')} icon="×" size="sm" onClick={onClose} />
+            <IconButton label={t('actions.close')} icon={<CloseIcon />} size="sm" onClick={onClose} />
           </header>
           <div className={styles.body}>{children}</div>
           {footer && <footer className={styles.footer}>{footer}</footer>}

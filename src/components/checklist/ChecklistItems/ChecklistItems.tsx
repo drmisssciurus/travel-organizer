@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Checkbox, IconButton, Input } from '@/components/ui'
+import { Button, Checkbox, CloseIcon, IconButton, Input } from '@/components/ui'
 import { useAppDispatch, useAppSelector } from '@/hooks/store'
 import { checklistItemToggled } from '@/store/slices/checklistItemsSlice'
 import { selectLanguage } from '@/store/slices/settingsSlice'
@@ -72,7 +72,7 @@ export function ChecklistItems({ group, items, today, filter = 'all', addLabel, 
                   className={styles.delete}
                   size="sm"
                   variant="ghost"
-                  icon="×"
+                  icon={<CloseIcon />}
                   label={t('checklist.itemDelete', { text: item.text })}
                   title={t('actions.delete')}
                   onClick={() => dispatch(deleteChecklistItem(item.id))}

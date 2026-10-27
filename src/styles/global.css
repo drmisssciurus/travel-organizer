@@ -94,3 +94,14 @@ html:has(dialog:modal) {
   margin-inline: auto;
   padding-inline: var(--page-gutter);
 }
+
+/* iOS Safari zooms the page into any field with text under 16px and doesn't zoom back
+   (the dialog then sticks out of the screen). On touch screens fields get 16px. */
+@media (pointer: coarse) {
+  input:not([type='checkbox'], [type='radio']),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
